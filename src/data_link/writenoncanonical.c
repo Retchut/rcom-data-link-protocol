@@ -68,11 +68,38 @@ int main(int argc, char **argv) {
   printf("New termios structure set\n");
 
   const char SET[] = {0x7E, 0x03, 0x03, 0x03^0x03, 0x7E};
-
+  enum msg {F = 0x7E, A = 0x01, C = 0x07, BCC = A^C};
+  enum flag_state flag = START;
   char* input;
-    int counter = 0;
+  int counter = 0;
   while (counter < 3) {
-    write(fd, SET, 5);
+    write(fd, SET, 5); //SET channel for communication
+
+    // State machine for parsing UA signal
+    while (flag != STOP) {
+    input = read(fd, input, 1);
+    switch(input) {
+        case F:
+            if (flag == BCC_OK) flag = STOP;
+            else flag = FLAG_RCV;
+            break;
+        case A:
+            if (flag == FLAG_RCV) flag = A_RCV;
+            else flag = START;
+            break;
+        case C:
+            if (flag == A_RCV) flag = C_RCV;
+            else flag = START;
+            break;
+        case BCC:
+            if (flag == C_RCV) flag = BCC_OK;
+            else flag = START;
+            break;
+        default:
+            flag = START;
+            break;
+    }
+
     sleep(1);
     counter++;
   }

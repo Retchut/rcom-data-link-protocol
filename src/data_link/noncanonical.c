@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
   }
 
     const char UA[] = {0x7E, 0x01, 0x07, 0x01^0x07, 0x7E};
-    write(fd, UA, 5);
+    write(fd, UA, 5); //Sends confirmation
 
   /*
     O ciclo WHILE deve ser alterado de modo a respeitar o indicado no guião
