@@ -64,18 +64,37 @@ int main(int argc, char **argv) {
   }
 
   printf("New termios structure set\n");
-
-  while (STOP == FALSE) {     /* loop for input */
-    res = read(fd, buf, 255); /* returns after 5 chars have been input */
-    buf[res] = 0;             /* so we can printf... */
-
-    printf(":%s:%d\n", buf, res);
-
-    write(fd, buf, res);
-
-    if (buf[0] == 'z')
-      STOP = TRUE;
+  const enum flag_state {START, FLAG_RCV, A_RCV, C_RCV, BCC_OK, STOP};
+  enum msg {F = 0x7E, A = 0x03, C = 0x03, BCC = A^C};
+  enum flag_state flag = START;
+  int input;
+  while (flag != STOP) {
+    input = read(fd, input, 1);
+    switch(input) {
+        case F:
+            if (flag == BCC_OK) flag = STOP;
+            else flag = FLAG_RCV;
+            break;
+        case A:
+            if (flag == FLAG_RCV) flag = A_RCV;
+            else flag = START;
+            break;
+        case C:
+            if (flag == A_RCV) flag = C_RCV;
+            else flag = START;
+            break;
+        case BCC:
+            if (flag == C_RCV) flag = BCC_OK;
+            else flag = START;
+            break;
+        default:
+            flag = START;
+            break;
+    }
   }
+
+    const char UA[] = {0x7E, 0x01, 0x07, 0x01^0x07, 0x7E};
+    write(fd, UA, 5);
 
   /*
     O ciclo WHILE deve ser alterado de modo a respeitar o indicado no guião

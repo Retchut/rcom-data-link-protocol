@@ -51,11 +51,11 @@ int main(int argc, char **argv) {
   newtio.c_lflag = 0;
 
   newtio.c_cc[VTIME] = 0; /* inter-character timer unused */
-  newtio.c_cc[VMIN] = 5;  /* blocking read until 5 chars received */
+  newtio.c_cc[VMIN] = 1;  /* blocking read until 1 chars received */
 
   /*
     VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a
-    leitura do(s) próximo(s) caracter(es)
+    leitura do(s) prÃ³ximo(s) caracter(es)
   */
 
   tcflush(fd, TCIOFLUSH);
@@ -67,31 +67,19 @@ int main(int argc, char **argv) {
 
   printf("New termios structure set\n");
 
-  char *input;
+  const char SET[] = {0x7E, 0x03, 0x03, 0x03^0x03, 0x7E};
 
-  while (TRUE) {
-    int counter = 0, i = 0;
-
-    gets(buf);
-
-    if (buf == NULL)
-      break;
-
-    while (buf[i] != '\0') {
-      counter++;
-      i++;
-    }
-
-    res = write(fd, buf, counter + 1);
-
-    res = read(fd, input, 255);
-    buf[res] = 0;
-    printf("RESPONSE: %s\n", buf);
+  char* input;
+    int counter = 0;
+  while (counter < 3) {
+    write(fd, SET, 5);
+    sleep(1);
+    counter++;
   }
 
   /*
-    O ciclo FOR e as instruções seguintes devem ser alterados de modo a
-    respeitar o indicado no guião
+    O ciclo FOR e as instruÃ§Ãµes seguintes devem ser alterados de modo a
+    respeitar o indicado no guiÃ£o
   */
 
   if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
