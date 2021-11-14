@@ -2,9 +2,12 @@
 
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <termios.h>
+#include <unistd.h>
 
 #define BAUDRATE B38400
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
@@ -12,6 +15,52 @@
 #define TRUE 1
 
 volatile int STOP = FALSE;
+
+int parse_set(int fd) {
+  // State machine for parsing SET signal
+  enum flag_state { START, FLAG_RCV, A_RCV, C_RCV, BCC_OK, STOP };
+  enum SET_msg { F = 0x7E, A = 0x03, C = 0x03, BCC = A ^ C };
+  enum flag_state flag = START;
+
+  int input;
+  int counter = 0;
+
+  while (flag != STOP && counter < 5) {
+    input = read(fd, input, 1);
+    if (input == NULL)
+      continue;
+    printf("READ_RECEIVED: %s", input);
+    counter++;
+
+    switch (input) {
+    case F:
+      if (flag == BCC_OK)
+        flag = STOP;
+      else
+        flag = FLAG_RCV;
+      break;
+    case A: // or case C
+      if (flag == FLAG_RCV)
+        flag = A_RCV;
+      else if (flag == A_RCV) // for when the input is C
+        flag = C_RCV;
+      else
+        flag = START;
+      break;
+    case BCC:
+      if (flag == C_RCV)
+        flag = BCC_OK;
+      else
+        flag = START;
+      break;
+    default:
+      flag = START;
+      break;
+    }
+  }
+
+  return flag == STOP ? EXIT_SUCCESS : EXIT_FAILURE;
+}
 
 int main(int argc, char **argv) {
   int fd, c, res;
@@ -49,7 +98,7 @@ int main(int argc, char **argv) {
   newtio.c_lflag = 0;
 
   newtio.c_cc[VTIME] = 0; /* inter-character timer unused */
-  newtio.c_cc[VMIN] = 5;  /* blocking read until 5 chars received */
+  newtio.c_cc[VMIN] = 0;  /* blocking read until 5 chars received */
 
   /*
     VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a
@@ -64,37 +113,12 @@ int main(int argc, char **argv) {
   }
 
   printf("New termios structure set\n");
-  const enum flag_state {START, FLAG_RCV, A_RCV, C_RCV, BCC_OK, STOP};
-  enum msg {F = 0x7E, A = 0x03, C = 0x03, BCC = A^C};
-  enum flag_state flag = START;
-  int input;
-  while (flag != STOP) {
-    input = read(fd, input, 1);
-    switch(input) {
-        case F:
-            if (flag == BCC_OK) flag = STOP;
-            else flag = FLAG_RCV;
-            break;
-        case A:
-            if (flag == FLAG_RCV) flag = A_RCV;
-            else flag = START;
-            break;
-        case C:
-            if (flag == A_RCV) flag = C_RCV;
-            else flag = START;
-            break;
-        case BCC:
-            if (flag == C_RCV) flag = BCC_OK;
-            else flag = START;
-            break;
-        default:
-            flag = START;
-            break;
-    }
+  while (1) {
+    parse_set(fd);
   }
 
-    const char UA[] = {0x7E, 0x01, 0x07, 0x01^0x07, 0x7E};
-    write(fd, UA, 5); //Sends confirmation
+  const char UA[] = {0x7E, 0x01, 0x07, 0x01 ^ 0x07, 0x7E};
+  write(fd, UA, 5); // Sends confirmation
 
   /*
     O ciclo WHILE deve ser alterado de modo a respeitar o indicado no guião

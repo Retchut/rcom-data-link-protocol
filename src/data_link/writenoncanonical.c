@@ -1,13 +1,15 @@
 /*Non-Canonical Input Processing*/
-
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <termios.h>
+#include <unistd.h>
 
 #define BAUDRATE B38400
-#define MODEMDEVICE "/dev/ttyS1"
+#define SERIAL_PORT "/dev/ttyS10"
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 #define FALSE 0
 #define TRUE 1
@@ -50,8 +52,8 @@ int main(int argc, char **argv) {
   /* set input mode (non-canonical, no echo,...) */
   newtio.c_lflag = 0;
 
-  newtio.c_cc[VTIME] = 0; /* inter-character timer unused */
-  newtio.c_cc[VMIN] = 1;  /* blocking read until 1 chars received */
+  newtio.c_cc[VTIME] = 30; /* inter-character timer unused */
+  newtio.c_cc[VMIN] = 0;   /* blocking read until 1 chars received */
 
   /*
     VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a
@@ -67,43 +69,60 @@ int main(int argc, char **argv) {
 
   printf("New termios structure set\n");
 
-  const char SET[] = {0x7E, 0x03, 0x03, 0x03^0x03, 0x7E};
-  enum msg {F = 0x7E, A = 0x01, C = 0x07, BCC = A^C};
-  enum flag_state flag = START;
-  char* input;
-  int counter = 0;
-  while (counter < 3) {
-    write(fd, SET, 5); //SET channel for communication
+  const char SET[] = {0x7E, 0x03, 0x03, 0x03 ^ 0x03, 0x7E};
+  enum msg { F = 0x7E, A = 0x01, C = 0x07, BCC = A ^ C };
+  enum flag_state { START, FLAG_RCV, A_RCV, C_RCV, BCC_OK, STOP };
 
+  enum flag_state flag = START;
+
+  int input;
+  int counter = 0;
+
+  while (counter < 3) { // TODO: Implement timeout
+
+    write(fd, SET, 5); // SET channel for communication
+
+    break;
     // State machine for parsing UA signal
     while (flag != STOP) {
-    input = read(fd, input, 1);
-    switch(input) {
-        case F:
-            if (flag == BCC_OK) flag = STOP;
-            else flag = FLAG_RCV;
-            break;
-        case A:
-            if (flag == FLAG_RCV) flag = A_RCV;
-            else flag = START;
-            break;
-        case C:
-            if (flag == A_RCV) flag = C_RCV;
-            else flag = START;
-            break;
-        case BCC:
-            if (flag == C_RCV) flag = BCC_OK;
-            else flag = START;
-            break;
-        default:
-            flag = START;
-            break;
+
+      input = read(fd, input, 1);
+      printf("WRITE RECEIVED: %s", input);
+
+      switch (input) {
+      case F:
+        if (flag == BCC_OK)
+          flag = STOP;
+        else
+          flag = FLAG_RCV;
+        break;
+      case A:
+        if (flag == FLAG_RCV)
+          flag = A_RCV;
+        else
+          flag = START;
+        break;
+      case C:
+        if (flag == A_RCV)
+          flag = C_RCV;
+        else
+          flag = START;
+        break;
+      case BCC:
+        if (flag == C_RCV)
+          flag = BCC_OK;
+        else
+          flag = START;
+        break;
+      default:
+        flag = START;
+        break;
+      }
+
+      sleep(1);
+      counter++;
     }
-
-    sleep(1);
-    counter++;
   }
-
   /*
     O ciclo FOR e as instruções seguintes devem ser alterados de modo a
     respeitar o indicado no guião
