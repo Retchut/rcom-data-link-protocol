@@ -86,8 +86,8 @@ int main(int argc, char **argv) {
     // State machine for parsing UA signal
     while (flag != STOP) {
 
-      input = read(fd, input, 1);
-      printf("WRITE RECEIVED: %s", input);
+      input = read(fd, &buf, 1);
+      printf("WRITE RECEIVED: %s", buf);
 
       switch (input) {
       case F:
@@ -123,6 +123,7 @@ int main(int argc, char **argv) {
       counter++;
     }
   }
+
   /*
     O ciclo FOR e as instruções seguintes devem ser alterados de modo a
     respeitar o indicado no guião
