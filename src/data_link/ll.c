@@ -9,7 +9,7 @@
 int writeSupervisionMessage(int port, int msg_addr, int ctrl_msg) {
 
   int ret = 0;
-  char buf[CTRL_MSG_SIZE];
+  unsigned char buf[CTRL_MSG_SIZE];
   buf[0] = FLAG;
   buf[1] = msg_addr;
   buf[2] = ctrl_msg;
@@ -18,7 +18,12 @@ int writeSupervisionMessage(int port, int msg_addr, int ctrl_msg) {
 
   ret = write(port, &buf, CTRL_MSG_SIZE);
 
-  return ret == CTRL_MSG_SIZE ? EXIT_SUCCESS : EXIT_FAILURE;
+  return ret != CTRL_MSG_SIZE ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int writeInformationMessage(int port, int msg_addr, int ctrl, int information) {
+  // TODO: Write this one using variable message size
+  return 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 /* In essence this is llopen. It needs a lot of tweaks done to it, but this is
@@ -35,15 +40,24 @@ int writeSupervisionMessage(int port, int msg_addr, int ctrl_msg) {
 int llopen(int port, unsigned char role) {
   int ret = 0;
 
-  if (role == RECEIVER) {
+  if (role == EMITTER) {
 
-    writeSupervisionMessage(port, SENDER_ADDR, SET);
+    ret = writeSupervisionMessage(port, SENDER_ADDR, SET);
 
-    /* Check if state is correct, maybe in another function */
+    /* Ch eck if state is correct, maybe in another function */
 
     char buf[CTRL_MSG_SIZE];
-    ret = read(port, &buf, 5); // Read back message and check if state is
-                               // correct, again, possibly in another function
+
+    // Read back message and check if state is
+    // correct, again, possibly in another function
+    ret = read(port, &buf, CTRL_MSG_SIZE);
+
+  } else if (role == RECEIVER) {
+
+    /*Put read in here, and check if messsage is received correctly (state
+     * machine)*/
+
+    ret = writeSupervisionMessage(port, RECEIVER_ADDR, UA);
   }
-  return EXIT_SUCCESS;
+  return ret ? EXIT_FAILURE : EXIT_SUCCESS;
 }

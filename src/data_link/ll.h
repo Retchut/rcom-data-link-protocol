@@ -6,6 +6,8 @@
 
 #define FLAG 0x7e
 #define SENDER_ADDR 0x03
+#define RECEIVER_ADDR 0x01
+#define UA 0x07
 #define SET 0x03
 #define EMITTER 0
 #define RECEIVER 1
