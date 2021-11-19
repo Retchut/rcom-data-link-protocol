@@ -6,20 +6,44 @@
 #include <termios.h>
 #include <unistd.h>
 
+int writeSupervisionMessage(int port, int msg_addr, int ctrl_msg) {
+
+  int ret = 0;
+  char buf[CTRL_MSG_SIZE];
+  buf[0] = FLAG;
+  buf[1] = msg_addr;
+  buf[2] = ctrl_msg;
+  buf[3] = BCC1(SENDER_ADDR, SET);
+  buf[4] = FLAG;
+
+  ret = write(port, &buf, CTRL_MSG_SIZE);
+
+  return ret == CTRL_MSG_SIZE ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+
 /* In essence this is llopen. It needs a lot of tweaks done to it, but this is
  * the overall jist of it. We need:
  * - Remove magic numbers
  * - Check if receiver or emmiter (this is the case of the emitter)
  * - Check for errors after writing, and before and after reading
+ * - Create state machine for parsing the frame received
  * - Implement number of tries, as well as timeout for the sending and receiving
  *   of messages.
  * - Separate concerns into different functions and files.
  * - Create a file only for the constants mentioned above.
  */
 int llopen(int port, unsigned char role) {
-  int ret;
-  char buf[5];
-  ret = write(port, &buf, 5);
-  ret = read(port, &buf, 5);
-  return 1;
+  int ret = 0;
+
+  if (role == RECEIVER) {
+
+    writeSupervisionMessage(port, SENDER_ADDR, SET);
+
+    /* Check if state is correct, maybe in another function */
+
+    char buf[CTRL_MSG_SIZE];
+    ret = read(port, &buf, 5); // Read back message and check if state is
+                               // correct, again, possibly in another function
+  }
+  return EXIT_SUCCESS;
 }
