@@ -82,7 +82,6 @@ int main(int argc, char **argv) {
 
     write(fd, SET, 5); // SET channel for communication
 
-    break;
     // State machine for parsing UA signal
     while (flag != STOP) {
 

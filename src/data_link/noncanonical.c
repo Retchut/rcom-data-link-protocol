@@ -22,14 +22,16 @@ int parse_set(int fd) {
   enum SET_msg { F = 0x7E, A = 0x03, C = 0x03, BCC = A ^ C };
   enum flag_state flag = START;
 
-  int input;
+  unsigned char input;
   int counter = 0;
 
+  printf("I got here\n");
+
   while (flag != STOP && counter < 5) {
-    input = read(fd, input, 1);
+    input = read(fd, &input, 1);
     if (input == NULL)
       continue;
-    printf("READ_RECEIVED: %s", input);
+    printf("READ_RECEIVED: %c\n", input);
     counter++;
 
     switch (input) {
@@ -97,7 +99,7 @@ int main(int argc, char **argv) {
   /* set input mode (non-canonical, no echo,...) */
   newtio.c_lflag = 0;
 
-  newtio.c_cc[VTIME] = 0; /* inter-character timer unused */
+  newtio.c_cc[VTIME] = 1; /* inter-character timer unused */
   newtio.c_cc[VMIN] = 0;  /* blocking read until 5 chars received */
 
   /*

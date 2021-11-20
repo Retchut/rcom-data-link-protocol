@@ -12,12 +12,16 @@
 #define EMITTER 0
 #define RECEIVER 1
 
+#define FAILURE -1
+
+typedef unsigned char byte;
+
 /*
  * @brief llopen is responsible for establishing the connection between the host
  * and some other serial port identified by the file descriptor fd.
  * As such, its job is to send the SET signal followed by reading the UA one.
  */
-int llopen(int port, unsigned char role);
+int llopen(int port, byte role);
 
 int llread();
 
