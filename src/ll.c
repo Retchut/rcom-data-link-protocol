@@ -22,14 +22,14 @@ int llopen(int port, bool transmitter){
     if (fd < 0)
     {
         perror(port);
-        exit(-1);
+        return(-1);
     }
 
     //save original serial port settings
     if (tcgetattr(fd, &oldtio) == -1)
     {
         perror("tcgetattr");
-        exit(-1);
+        return(-1);
     }
 
     //prepares new serial port settings
@@ -47,7 +47,7 @@ int llopen(int port, bool transmitter){
     if (tcsetattr(fd, TCSANOW, &newtio) == -1)
     {
         perror("tcsetattr");
-        exit(-1);
+        return(-1);
     }
     printf("New termios structure set\n");
 
@@ -61,4 +61,20 @@ int llopen(int port, bool transmitter){
     }
 
     return fd;
+}
+
+int llclose(int fd){
+    //restore original serial port settings
+    if(tcsetattr(fd, TCSANOW, &oldtio) == -1){
+        perror("tcsetattr");
+        return(-1);
+    }
+    
+    //close serial port
+    if(close(fd) == -1){
+        perror("close");
+        return(-1);
+    }
+
+    return 0;
 }

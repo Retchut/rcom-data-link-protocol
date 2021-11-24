@@ -10,8 +10,8 @@
 
 int llopen(int port, bool transmitter);
 
+int llclose(int fd);
+
 int llwrite(int fd, char * buffer, int length);
 
 int llread(int fd, char * buffer);
-
-int llclose(int fd);
