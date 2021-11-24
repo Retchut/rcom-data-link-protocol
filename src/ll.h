@@ -8,7 +8,7 @@
 #define RECEIVER FALSE
 #define TRANSMITTER TRUE
 
-int llopen(int porta, bool transmitter);
+int llopen(int port, bool transmitter);
 
 int llwrite(int fd, char * buffer, int length);
 

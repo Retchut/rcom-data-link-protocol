@@ -10,11 +10,55 @@
 
 #include "ll.h"
 
-int llopen(int porta, bool transmitter){
-    if(transmitter){
+struct termios oldtio;
 
+int llopen(int port, bool transmitter){
+    int fd;
+    struct termios newtio;
+
+    //open serial port
+    fd = open(port, O_RDWR | O_NOCTTY);
+
+    if (fd < 0)
+    {
+        perror(port);
+        exit(-1);
+    }
+
+    //save original serial port settings
+    if (tcgetattr(fd, &oldtio) == -1)
+    {
+        perror("tcgetattr");
+        exit(-1);
+    }
+
+    //prepares new serial port settings
+    bzero(&newtio, sizeof(newtio));
+    newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
+    newtio.c_iflag = IGNPAR;
+    newtio.c_oflag = 0;
+    newtio.c_lflag = 0; //input mode (non-canonical, no echo,...)
+    newtio.c_cc[VTIME]= 30; /* inter-character timer unused */
+    newtio.c_cc[VMIN] = 0;  /* blocking read until 5 chars received */
+
+    tcflush(fd, TCIOFLUSH); //discards data written to fd
+
+    //apply new serial port settings
+    if (tcsetattr(fd, TCSANOW, &newtio) == -1)
+    {
+        perror("tcsetattr");
+        exit(-1);
+    }
+    printf("New termios structure set\n");
+
+    if(transmitter){
+        //Send SET
+        //Wait to receive UA
     }
     else{
-        
+        //Wait to receive SET
+        //Send UA
     }
+
+    return fd;
 }
