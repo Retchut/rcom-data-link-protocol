@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -c -Wall
 
 all: ll.o
-	$(CC) ll.o write.c -o write
+	$(CC) ll.o send.c -o send
 	$(CC) ll.o recv.c -o recv
 
 ll.o: ll.c
