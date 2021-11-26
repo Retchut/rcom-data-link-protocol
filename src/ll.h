@@ -8,6 +8,10 @@
 #define RECEIVER FALSE
 #define TRANSMITTER TRUE
 
+#define SUPERVISION FALSE
+#define UNNUMERATED FALSE
+#define INFORMATION TRUE
+
 #define BIT(shift) 1 << shift
 
 #define FLAG        0x7E
@@ -30,4 +34,8 @@ int llwrite(int fd, char * buffer, int length);
 
 int llread(int fd, char * buffer);
 
-int writeFrame(char *buffer, int length);
+int writeFrame(char **frame, int length);
+
+int buildFrame(char **frame, bool type);
+
+int buildBCC();

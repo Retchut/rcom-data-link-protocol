@@ -21,7 +21,7 @@ int llopen(int port, bool transmitter){
 
     if (fd < 0)
     {
-        perror(port);
+        perror("open");
         return(-1);
     }
 
@@ -77,4 +77,25 @@ int llclose(int fd){
     }
 
     return 0;
+}
+
+int buildFrame(char **frame, char addr, char cmd, char *info){
+    frame[0] = FLAG;
+    frame[1] = addr;
+    frame[2] = cmd;
+    frame[3] = buildBCC();
+
+    //check if we're not building an information frame
+    if(info == NULL){
+        frame[4] = FLAG;
+        return 0;
+    }
+    else{
+        frame[4] = info;
+        frame[5] = buildBCC();
+        frame[6] = FLAG;
+        return 0;
+    }
+
+    return -1;
 }
