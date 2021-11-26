@@ -34,7 +34,7 @@ unsigned char buildBCC2(unsigned char *data, size_t size);
 
 int buildFrame(unsigned char *frame, unsigned char addr, unsigned char cmd, unsigned char *infoPtr, size_t infoSize);
 
-int writeFrame(char **frame, int length);
+int writeFrame(int fd, char *frame, int length);
 
 int llopen(int port, bool transmitter);
 

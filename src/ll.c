@@ -43,8 +43,12 @@ int buildFrame(unsigned char *frame, unsigned char addr, unsigned char cmd, unsi
     return -1;
 }
 
-int writeFrame(char **frame, int length){
-    
+int writeFrame(int fd, char *frame, int size){
+    if(write(fd, frame, size) == -1){
+        perror("write Frame");
+        return -1;
+    }
+    return 0;
 }
 
 int llopen(int port, bool transmitter){
@@ -59,7 +63,7 @@ int llopen(int port, bool transmitter){
 
     if (fd < 0)
     {
-        perror("open");
+        perror(serialPort);
         return(-1);
     }
 
