@@ -1,4 +1,5 @@
 #include <stdbool.h>
+// #include <stddef.h>
 
 #define BAUDRATE B38400
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
@@ -14,8 +15,8 @@
 
 #define BIT(shift) 1 << shift
 
-#define SU_FRAME_SIZE   5*sizeof(unsigned char)
-#define I_FRAME_SIZE(s) 6*sizeof(unsigned char) + s*sizeof(unsigned char)
+#define SU_FRAME_SIZE   5
+#define I_FRAME_SIZE(s) 6 + s
 
 #define FLAG        0x7E
 #define A_WRT_CMD   0x03
@@ -34,16 +35,16 @@ unsigned char buildBCC2(unsigned char *data, size_t size);
 
 int buildFrame(unsigned char *frame, unsigned char addr, unsigned char cmd, unsigned char *infoPtr, size_t infoSize);
 
-int writeFrame(int fd, char *frame, size_t size);
+int writeFrame(int fd, unsigned char *frame, size_t size);
 
-int readFrame(int fd, char *frame, size_t expectedSize);
+int readFrame(int fd, unsigned char *frame, size_t expectedSize);
 
-bool testFrameEquality(char *frame1, char *frame2, size_t size);
+bool testFrameEquality(unsigned char *frame1, unsigned char *frame2, size_t size);
 
 int llopen(int port, bool transmitter);
 
 int llclose(int fd);
 
-int llwrite(int fd, char * buffer, int length);
+int llwrite(int fd, unsigned char * buffer, int length);
 
-int llread(int fd, char * buffer);
+int llread(int fd, unsigned char * buffer);

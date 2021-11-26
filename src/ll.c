@@ -34,24 +34,24 @@ int buildFrame(unsigned char *frame, unsigned char addr, unsigned char cmd, unsi
         return 0;
     }
     else{
-        frame[4] = infoPtr;
-        frame[5] = buildBCC2(infoPtr, infoSize);
-        frame[6] = FLAG;
+        memcpy(frame+4, infoPtr, infoSize);
+        frame[infoSize+4] = buildBCC2(infoPtr, infoSize);
+        frame[infoSize+5] = FLAG;
         return 0;
     }
 
     return -1;
 }
 
-int writeFrame(int fd, char *frame, size_t size){
+int writeFrame(int fd, unsigned char *frame, size_t size){
     if(write(fd, frame, size) == -1){
-        perror("write rame");
+        perror("write frame");
         return -1;
     }
     return 0;
 }
 
-int readFrame(int fd, char *frame, size_t expectedSize){
+int readFrame(int fd, unsigned char *frame, size_t expectedSize){
     if(read(fd, frame, expectedSize) == -1){
         perror("read frame");
         return -1;
@@ -59,7 +59,7 @@ int readFrame(int fd, char *frame, size_t expectedSize){
     return 0;
 }
 
-bool testFrameEquality(char *frame1, char *frame2, size_t size){
+bool testFrameEquality(unsigned char *frame1, unsigned char *frame2, size_t size){
     for(size_t p=0; p<0; p++){
         if(frame1[p]!=frame2[p]) return false;
     }
@@ -70,8 +70,10 @@ int llopen(int port, bool transmitter){
     int fd;
     struct termios newtio;
 
-    char serialPort[11] = "/dev/ttyS10";
-    sprintf(serialPort, "%s %d", "/dev/ttyS", port);
+    char serialPort[11];
+    sprintf(serialPort, "%s%d", "/dev/ttyS", port);
+
+    printf("%s\n", serialPort);
     
     //open serial port
     fd = open(serialPort, O_RDWR | O_NOCTTY);
@@ -130,15 +132,9 @@ int llopen(int port, bool transmitter){
         return -1;
     }
 
+    bool completed = false;
+
     if(transmitter){
-        //write command frame
-        if(writeFrame(fd, setFrame, SU_FRAME_SIZE) != 0){
-            printf("Error writing set frame.\n");
-            return -1;
-        }
-
-        printf("Sent SET frame.\n");
-
         //build test frame
         unsigned char *expectedUA = (unsigned char *) malloc (SU_FRAME_SIZE);
         if(setFrame == NULL){
@@ -146,19 +142,29 @@ int llopen(int port, bool transmitter){
             return -1;
         }
 
-        //read response frame
-        if(readFrame(fd, expectedUA, SU_FRAME_SIZE) != 0){
-            printf("Error reading UA frame.\n");
-            return -1;
-        }
+        //TODO: implement timeout here
+        while(!completed){
+            //write command frame
+            if(writeFrame(fd, setFrame, SU_FRAME_SIZE) != 0){
+                printf("Error writing set frame.\n");
+                continue;
+            }
+            printf("Sent SET frame.\n");
 
-        //test expected response
-        if(!testFrameEquality(expectedUA, uaFrame, SU_FRAME_SIZE)){
-            printf("SET response not UA frame.\n");
-            return -1;
-        }
+            //read response frame
+            if(readFrame(fd, expectedUA, SU_FRAME_SIZE) != 0){
+                printf("Error reading UA frame.\n");
+                continue;
+            }
 
-        printf("Received UA frame.\n");
+            //test expected response
+            if(!testFrameEquality(expectedUA, uaFrame, SU_FRAME_SIZE)){
+                printf("SET response not UA frame.\n");
+                continue;
+            }
+            printf("Received UA frame.\n");
+            completed = true;
+        }
 
         free(expectedUA);
     }
@@ -170,27 +176,29 @@ int llopen(int port, bool transmitter){
             return -1;
         }
 
-        //read response frame
-        if(readFrame(fd, expectedSet, SU_FRAME_SIZE) != 0){
-            printf("Error reading UA frame.\n");
-            return -1;
+        //TODO: implement timeout here
+        while(!completed){
+            //read response frame
+            if(readFrame(fd, expectedSet, SU_FRAME_SIZE) != 0){
+                printf("Error reading UA frame.\n");
+                continue;
+            }
+
+            //test expected response
+            if(!testFrameEquality(expectedSet, uaFrame, SU_FRAME_SIZE)){
+                printf("SET response not UA frame.\n");
+                continue;
+            }
+            printf("Received SET frame.\n");
+
+            //write command frame
+            if(writeFrame(fd, uaFrame, SU_FRAME_SIZE) != 0){
+                printf("Error writing set frame.\n");
+                continue;
+            }
+            printf("Sent UA frame.\n");
+            completed = true;
         }
-
-        //test expected response
-        if(!testFrameEquality(expectedSet, uaFrame, SU_FRAME_SIZE)){
-            printf("SET response not UA frame.\n");
-            return -1;
-        }
-
-        printf("Received SET frame.\n");
-
-        //write command frame
-        if(writeFrame(fd, uaFrame, SU_FRAME_SIZE) != 0){
-            printf("Error writing set frame.\n");
-            return -1;
-        }
-
-        printf("Sent UA frame.\n");
 
         free(expectedSet);
     }
