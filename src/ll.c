@@ -12,12 +12,25 @@
 
 struct termios oldtio;
 
+unsigned char buildBCC2(unsigned char *data, size_t size){
+    unsigned char bcc2 = data[0];
+
+    for(size_t p = 0; p<size; p++){
+        bcc2 ^= data[p];
+    }
+
+    return bcc2;
+}
+
 int llopen(int port, bool transmitter){
     int fd;
     struct termios newtio;
 
+    char serialPort[11] = "/dev/ttyS10";
+    sprintf(serialPort, "%s %d", "/dev/ttyS", port);
+    
     //open serial port
-    fd = open(port, O_RDWR | O_NOCTTY);
+    fd = open(serialPort, O_RDWR | O_NOCTTY);
 
     if (fd < 0)
     {
@@ -52,6 +65,16 @@ int llopen(int port, bool transmitter){
     printf("New termios structure set\n");
 
     if(transmitter){
+        unsigned char *setFrame = (unsigned char *) malloc(SU_FRAME_SIZE);
+        if(setFrame == NULL){
+            printf("Error in malloc - SET frame.");
+            return -1;
+        }
+        if(buildFrame(setFrame, A_WRT_CMD, C_SET, NULL, 0) != 0){
+            printf("Error building frame - SET frame.");
+            return -1;
+        }
+
         //Send SET
         //Wait to receive UA
     }
@@ -79,20 +102,20 @@ int llclose(int fd){
     return 0;
 }
 
-int buildFrame(char **frame, char addr, char cmd, char *info){
+int buildFrame(unsigned char *frame, unsigned char addr, unsigned char cmd, unsigned char *infoPtr, size_t infoSize){
     frame[0] = FLAG;
     frame[1] = addr;
     frame[2] = cmd;
-    frame[3] = buildBCC();
+    frame[3] = BCC1(addr, cmd);
 
     //check if we're not building an information frame
-    if(info == NULL){
+    if(infoPtr == NULL){
         frame[4] = FLAG;
         return 0;
     }
     else{
-        frame[4] = info;
-        frame[5] = buildBCC();
+        frame[4] = infoPtr;
+        frame[5] = buildBCC2(infoPtr, infoSize);
         frame[6] = FLAG;
         return 0;
     }
