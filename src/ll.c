@@ -22,6 +22,31 @@ unsigned char buildBCC2(unsigned char *data, size_t size){
     return bcc2;
 }
 
+int buildFrame(unsigned char *frame, unsigned char addr, unsigned char cmd, unsigned char *infoPtr, size_t infoSize){
+    frame[0] = FLAG;
+    frame[1] = addr;
+    frame[2] = cmd;
+    frame[3] = BCC1(addr, cmd);
+
+    //check if we're not building an information frame
+    if(infoPtr == NULL){
+        frame[4] = FLAG;
+        return 0;
+    }
+    else{
+        frame[4] = infoPtr;
+        frame[5] = buildBCC2(infoPtr, infoSize);
+        frame[6] = FLAG;
+        return 0;
+    }
+
+    return -1;
+}
+
+int writeFrame(char **frame, int length){
+    
+}
+
 int llopen(int port, bool transmitter){
     int fd;
     struct termios newtio;
@@ -100,25 +125,4 @@ int llclose(int fd){
     }
 
     return 0;
-}
-
-int buildFrame(unsigned char *frame, unsigned char addr, unsigned char cmd, unsigned char *infoPtr, size_t infoSize){
-    frame[0] = FLAG;
-    frame[1] = addr;
-    frame[2] = cmd;
-    frame[3] = BCC1(addr, cmd);
-
-    //check if we're not building an information frame
-    if(infoPtr == NULL){
-        frame[4] = FLAG;
-        return 0;
-    }
-    else{
-        frame[4] = infoPtr;
-        frame[5] = buildBCC2(infoPtr, infoSize);
-        frame[6] = FLAG;
-        return 0;
-    }
-
-    return -1;
 }
