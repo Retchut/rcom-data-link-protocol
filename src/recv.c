@@ -1,3 +1,7 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "ll.h"
 
 int main(int argc, char **argv){
@@ -15,7 +19,7 @@ int main(int argc, char **argv){
 
     //open
     int fd = -1;
-    if((fd = llopen(port, TRANSMITTER)) < 0){
+    if((fd = llopen(port, RECEIVER)) < 0){
         printf("Error in llopen.\n");
         exit(1);
     }
