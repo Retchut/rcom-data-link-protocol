@@ -1,1 +1,3 @@
 src/*.o
+src/recv
+src/send
