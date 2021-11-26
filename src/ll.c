@@ -43,7 +43,7 @@ int buildFrame(unsigned char *frame, unsigned char addr, unsigned char cmd, unsi
     return -1;
 }
 
-int writeFrame(int fd, char *frame, int size){
+int writeFrame(int fd, char *frame, size_t size){
     if(write(fd, frame, size) == -1){
         perror("write rame");
         return -1;
@@ -51,12 +51,19 @@ int writeFrame(int fd, char *frame, int size){
     return 0;
 }
 
-int readFrame(int fd, char *frame, int expectedSize){
+int readFrame(int fd, char *frame, size_t expectedSize){
     if(read(fd, frame, expectedSize) == -1){
         perror("read frame");
         return -1;
     }
     return 0;
+}
+
+bool testFrameEquality(char *frame1, char *frame2, size_t size){
+    for(size_t p=0; p<0; p++){
+        if(frame1[p]!=frame2[p]) return false;
+    }
+    return true;
 }
 
 int llopen(int port, bool transmitter){
@@ -101,23 +108,95 @@ int llopen(int port, bool transmitter){
     }
     printf("New termios structure set\n");
 
+    //build frames
+    //SET frame
+    unsigned char *setFrame = (unsigned char *) malloc(SU_FRAME_SIZE);
+    if(setFrame == NULL){
+        printf("Error in malloc - SET frame.\n");
+        return -1;
+    }
+    if(buildFrame(setFrame, A_WRT_CMD, C_SET, NULL, 0) != 0){
+        printf("Error building frame - SET frame.\n");
+        return -1;
+    }
+    //UA frame
+    unsigned char *uaFrame = (unsigned char *) malloc (SU_FRAME_SIZE);
+    if(setFrame == NULL){
+        printf("Error in malloc - SET res frame.\n");
+        return -1;
+    }
+    if(buildFrame(uaFrame, A_RCV_RESP, C_UA, NULL, 0) != 0){
+        printf("Error building frame - UA response frame.\n");
+        return -1;
+    }
+
     if(transmitter){
-        unsigned char *setFrame = (unsigned char *) malloc(SU_FRAME_SIZE);
-        if(setFrame == NULL){
-            printf("Error in malloc - SET frame.");
+        //write command frame
+        if(writeFrame(fd, setFrame, SU_FRAME_SIZE) != 0){
+            printf("Error writing set frame.\n");
             return -1;
         }
 
-        if(buildFrame(setFrame, A_WRT_CMD, C_SET, NULL, 0) != 0){
-            printf("Error building frame - SET frame.");
+        printf("Sent SET frame.\n");
+
+        //build test frame
+        unsigned char *expectedUA = (unsigned char *) malloc (SU_FRAME_SIZE);
+        if(setFrame == NULL){
+            printf("Error in malloc - ua test frame.\n");
             return -1;
         }
-        //Wait to receive UA
+
+        //read response frame
+        if(readFrame(fd, expectedUA, SU_FRAME_SIZE) != 0){
+            printf("Error reading UA frame.\n");
+            return -1;
+        }
+
+        //test expected response
+        if(!testFrameEquality(expectedUA, uaFrame, SU_FRAME_SIZE)){
+            printf("SET response not UA frame.\n");
+            return -1;
+        }
+
+        printf("Received UA frame.\n");
+
+        free(expectedUA);
     }
     else{
-        //Wait to receive SET
-        //Send UA
+        //build test frame
+        unsigned char *expectedSet = (unsigned char *) malloc(SU_FRAME_SIZE);
+        if(setFrame == NULL){
+            printf("Error in malloc - SET frame.\n");
+            return -1;
+        }
+
+        //read response frame
+        if(readFrame(fd, expectedSet, SU_FRAME_SIZE) != 0){
+            printf("Error reading UA frame.\n");
+            return -1;
+        }
+
+        //test expected response
+        if(!testFrameEquality(expectedSet, uaFrame, SU_FRAME_SIZE)){
+            printf("SET response not UA frame.\n");
+            return -1;
+        }
+
+        printf("Received SET frame.\n");
+
+        //write command frame
+        if(writeFrame(fd, uaFrame, SU_FRAME_SIZE) != 0){
+            printf("Error writing set frame.\n");
+            return -1;
+        }
+
+        printf("Sent UA frame.\n");
+
+        free(expectedSet);
     }
+
+    free(setFrame);
+    free(uaFrame);
 
     return fd;
 }

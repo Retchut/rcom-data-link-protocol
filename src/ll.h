@@ -36,9 +36,9 @@ int buildFrame(unsigned char *frame, unsigned char addr, unsigned char cmd, unsi
 
 int writeFrame(int fd, char *frame, size_t size);
 
-bool testFrameEquality(char *frame1, char *frame2, size_t size);
+int readFrame(int fd, char *frame, size_t expectedSize);
 
-int readFrame(int fd, char *frame, int expectedSize);
+bool testFrameEquality(char *frame1, char *frame2, size_t size);
 
 int llopen(int port, bool transmitter);
 
