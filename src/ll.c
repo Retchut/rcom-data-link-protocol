@@ -45,7 +45,15 @@ int buildFrame(unsigned char *frame, unsigned char addr, unsigned char cmd, unsi
 
 int writeFrame(int fd, char *frame, int size){
     if(write(fd, frame, size) == -1){
-        perror("write Frame");
+        perror("write rame");
+        return -1;
+    }
+    return 0;
+}
+
+int readFrame(int fd, char *frame, int expectedSize){
+    if(read(fd, frame, expectedSize) == -1){
+        perror("read frame");
         return -1;
     }
     return 0;
@@ -99,12 +107,11 @@ int llopen(int port, bool transmitter){
             printf("Error in malloc - SET frame.");
             return -1;
         }
+
         if(buildFrame(setFrame, A_WRT_CMD, C_SET, NULL, 0) != 0){
             printf("Error building frame - SET frame.");
             return -1;
         }
-
-        //Send SET
         //Wait to receive UA
     }
     else{
