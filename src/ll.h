@@ -34,7 +34,9 @@ unsigned char buildBCC2(unsigned char *data, size_t size);
 
 int buildFrame(unsigned char *frame, unsigned char addr, unsigned char cmd, unsigned char *infoPtr, size_t infoSize);
 
-int writeFrame(int fd, char *frame, int size);
+int writeFrame(int fd, char *frame, size_t size);
+
+bool testFrameEquality(char *frame1, char *frame2, size_t size);
 
 int readFrame(int fd, char *frame, int expectedSize);
 
