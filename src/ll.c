@@ -61,11 +61,14 @@ int readSupervisionFrame(int fd) {
 
   set_state(START);
   time_t start_time = time(NULL), end_time = time(NULL);
-  while (difftime(start_time, end_time) < 3 && get_state() != STOP) {
+
+  while (difftime(end_time, start_time) < 3 && get_state() != STOP) {
 
     ret = read(fd, &buf, 1);
+
+    printf("I read a %c\n", buf);
     if (ret == -1) {
-      perror("read: ");
+      perror("read");
       exit(-1);
     }
     if (ret == 0) {
@@ -77,53 +80,79 @@ int readSupervisionFrame(int fd) {
     handleState(buf);
   }
 
-  return SU_FRAME_SIZE;
+  return difftime(end_time, start_time) < 3 ? SU_FRAME_SIZE : -1;
 }
 
 int llopen(int fd, bool role) {
   if (role == TRANSMITTER) {
     int ret;
 
-    ret = writeSupervisionFrame(fd, A_SEND_CMD_ADDR, C_SET);
+    for (int i = 0; i < 3; i++) {
+      for (int i = 0; i < 3; i++) {
+        ret = writeSupervisionFrame(fd, A_SEND_CMD_ADDR, C_SET);
+        if (ret != SU_FRAME_SIZE) {
+          sleep(2);
+        } else {
+          printf("Sent SET frame\n");
+          break;
+        }
+      }
 
-    if (ret != SU_FRAME_SIZE) {
-      sleep(2);
+      if (ret != SU_FRAME_SIZE) {
+        fprintf(stderr, "Error writing SET Frame\n");
+        continue;
+      }
+
+      ret = readSupervisionFrame(fd);
+
+      if (ret != SU_FRAME_SIZE || get_ctrl() != C_UA) {
+        fprintf(stderr, "Error reading UA Frame\n");
+      } else {
+        printf("Received UA frame\n");
+        return fd;
+      }
     }
 
-    printf("Sent SET frame\n");
+    fprintf(stderr, "Error establishing communication\n");
 
-    ret = readSupervisionFrame(fd);
-
-    if (ret != SU_FRAME_SIZE) {
-      perror("readSupervisionFrame");
-    }
-
-    printf("Received UA frame\n");
-
-    return 0;
+    return -1;
 
   } else if (role == RECEIVER) {
     int ret;
+    for (int i = 0; i < 3; i++) {
+      for (int i = 0; i < 3; i++) {
+        ret = readSupervisionFrame(fd);
+        if (ret != SU_FRAME_SIZE) {
+          sleep(2);
+        } else {
+          printf("Received SET frame\n");
+          break;
+        }
+      }
 
-    ret = readSupervisionFrame(fd);
+      if (ret != SU_FRAME_SIZE || get_ctrl() != C_SET) {
+        fprintf(stderr, "Error reading SET frame\n");
+        continue;
+      }
 
-    if (ret != SU_FRAME_SIZE) {
-      perror("readSupervisionFrame");
-      exit(-1);
+      for (int i = 0; i < 3; i++) {
+        ret = writeSupervisionFrame(fd, A_RECV_CMD_ADDR, C_UA);
+        if (ret != SU_FRAME_SIZE) {
+          sleep(2);
+        } else {
+          printf("Sent UA frame\n");
+          break;
+        }
+      }
+
+      if (ret != SU_FRAME_SIZE) {
+        fprintf(stderr, "Error writing UA frame\n");
+      } else {
+        printf("Wrote UA Frame \n");
+        return fd;
+      }
     }
-
-    printf("Received SET frame\n");
-
-    ret = writeSupervisionFrame(fd, A_RECV_CMD_ADDR, C_UA);
-
-    if (ret != SU_FRAME_SIZE) {
-      perror("writeSupervisionFrame");
-      exit(-1);
-    }
-
-    printf("Sent UA frame\n");
-
-    return fd;
+    return -1;
   } else {
     return -1;
   }
