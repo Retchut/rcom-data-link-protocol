@@ -36,14 +36,16 @@ unsigned char buildBCC2(unsigned char *data, size_t size);
 int buildFrame(unsigned char *frame, unsigned char addr, unsigned char cmd,
                unsigned char *infoPtr, size_t infoSize);
 
-int writeFrame(int fd, unsigned char *frame, size_t size);
+int writeSupervisionFrame(int fd, unsigned char msg_addr,
+                          unsigned char msg_ctrl);
 
-int readFrame(int fd, unsigned char *frame, size_t expectedSize);
+int writeInformationFrame(int fd, unsigned char msg_addr,
+                          unsigned char msg_ctrl, unsigned char *info_ptr,
+                          size_t info_size);
 
-bool testFrameEquality(unsigned char *frame1, unsigned char *frame2,
-                       size_t size);
+int readSupervisionFrame(int fd);
 
-int llopen(int port, bool transmitter);
+int llopen(int fd, bool transmitter);
 
 int llclose(int fd);
 
