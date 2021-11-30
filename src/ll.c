@@ -64,7 +64,17 @@ int readSupervisionFrame(int fd) {
       exit(-1);
     }
 
-    printf("Received a %c\n", buf);
+    if (buf == 0x03)
+      printf("Received 0x03\n");
+    else if (buf == 0x00)
+      printf("Received 0x00\n");
+    else if (buf == 0x01)
+      printf("Received 0x01\n");
+    else if (buf == 0x07)
+      printf("Received 0x07\n");
+    else
+      printf("Received a %c\n", buf);
+
     count++;
     sleep(1);
   }
@@ -84,6 +94,8 @@ int llopen(int fd, bool role) {
       perror("writeSupervisionFrame");
       exit(-1);
     }
+
+    sleep(2);
 
     ret = readSupervisionFrame(fd);
 
@@ -117,7 +129,7 @@ int llopen(int fd, bool role) {
 
     printf("Sent UA frame");
 
-    return 0;
+    return fd;
   } else {
     return -1;
   }

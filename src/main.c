@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
   }
 
   bool role = -1;
-  if (argc == 2 && strcmp(argv[1], "emitter") == 0) {
+  if (strcmp(argv[1], "emitter") == 0) {
     role = TRANSMITTER;
   } else if (strcmp(argv[1], "receiver") == 0) {
     role = RECEIVER;
