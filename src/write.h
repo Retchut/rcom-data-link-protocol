@@ -9,5 +9,8 @@ int writeInformationFrame(int fd, unsigned char addr, unsigned char cmd,
 int writeSupervisionFrame(int fd, unsigned char msg_addr,
                           unsigned char msg_ctrl);
 
+int writeSupervisionAndRetry(int fd, unsigned char msg_addr,
+                             unsigned char msg_ctrl);
+
 unsigned char buildBCC2(unsigned char *data, size_t size);
 #endif // WRITE_H_

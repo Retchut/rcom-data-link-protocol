@@ -14,6 +14,7 @@ int writeInformationFrame(int fd, unsigned char addr, unsigned char cmd,
   frame[2] = cmd;
   frame[3] = BCC1(addr, cmd);
 
+  // TODO: Byte stuff the info part of the message
   // check if we're not building an information frame
   memcpy(frame + 4, infoPtr, infoSize);
   frame[infoSize + 4] = buildBCC2(infoPtr, infoSize);
@@ -35,6 +36,7 @@ int writeSupervisionFrame(int fd, unsigned char msg_addr,
   return write(fd, &buf, SU_FRAME_SIZE);
 }
 
+// TODO: Maybe make it static
 unsigned char buildBCC2(unsigned char *data, size_t size) {
   unsigned char bcc2 = data[0];
 
@@ -43,4 +45,20 @@ unsigned char buildBCC2(unsigned char *data, size_t size) {
   }
 
   return bcc2;
+}
+
+int writeSupervisionAndRetry(int fd, unsigned char msg_addr,
+                             unsigned char msg_ctrl) {
+  int ret = 0;
+
+  for (int i = 0; i < NUM_TRIES; i++) {
+    ret = writeSupervisionFrame(fd, msg_addr, msg_ctrl);
+    if (ret != SU_FRAME_SIZE) {
+      sleep(2);
+    } else {
+      return 0;
+    }
+  }
+
+  return -1;
 }
