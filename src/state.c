@@ -1,4 +1,5 @@
 #include "state.h"
+#include "defines.h"
 #include "ll.h"
 
 static state_machine state;
