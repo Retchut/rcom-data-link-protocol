@@ -8,21 +8,18 @@
 
 #define RECEIVER FALSE
 #define TRANSMITTER TRUE
-
-#define SUPERVISION FALSE
-#define UNNUMERATED FALSE
-#define INFORMATION TRUE
+#define UNKNOW_ROLE -1
 
 #define BIT(shift) 1 << shift
 
 #define SU_FRAME_SIZE 5
 #define I_FRAME_SIZE(s) 6 + s
 
+#define NUM_TRIES 3
+
 #define FLAG 0x7E
-#define A_SEND_CMD_ADDR 0x03
-#define A_RECV_RESP_ADDR 0x03
-#define A_RECV_CMD_ADDR 0x01
-#define A_SEND_RESP_ADDR 0x01
+#define A_SEND_ADDR 0x03
+#define A_RECV_ADDR 0x01
 #define C_INF(n) (n << 6)
 #define C_SET 0x03
 #define C_DISC 0x0B
