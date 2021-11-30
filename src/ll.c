@@ -11,6 +11,16 @@
 
 #include "./ll.h"
 
+unsigned char buildBCC2(unsigned char *data, size_t size) {
+  unsigned char bcc2 = data[0];
+
+  for (size_t p = 0; p < size; p++) {
+    bcc2 ^= data[p];
+  }
+
+  return bcc2;
+}
+
 int writeInformationFrame(int fd, unsigned char addr, unsigned char cmd,
                           unsigned char *infoPtr, size_t infoSize) {
 
@@ -32,14 +42,13 @@ int writeInformationFrame(int fd, unsigned char addr, unsigned char cmd,
 int writeSupervisionFrame(int fd, unsigned char msg_addr,
                           unsigned char msg_ctrl) {
 
-  unsigned char buf[SU_FRAME_SIZE] = "ABCDE";
+  unsigned char buf[SU_FRAME_SIZE];
 
-  /*  buf[0] = FLAG;
-    buf[1] = msg_addr;
-    buf[2] = msg_ctrl;
-    buf[3] = BCC1(msg_addr, msg_ctrl);
-    buf[4] = FLAG;
-    */
+  buf[0] = FLAG;
+  buf[1] = msg_addr;
+  buf[2] = msg_ctrl;
+  buf[3] = BCC1(msg_addr, msg_ctrl);
+  buf[4] = FLAG;
 
   return write(fd, &buf, SU_FRAME_SIZE);
 }
@@ -75,8 +84,6 @@ int llopen(int fd, bool role) {
       perror("writeSupervisionFrame");
       exit(-1);
     }
-
-    sleep(1);
 
     ret = readSupervisionFrame(fd);
 
