@@ -41,7 +41,6 @@ int writeInformationFrame(int fd, unsigned char addr, unsigned char cmd,
 
 int writeSupervisionFrame(int fd, unsigned char msg_addr,
                           unsigned char msg_ctrl) {
-
   unsigned char buf[SU_FRAME_SIZE];
 
   buf[0] = FLAG;
@@ -54,7 +53,12 @@ int writeSupervisionFrame(int fd, unsigned char msg_addr,
 }
 
 int readSupervisionFrame(int fd) {
-  unsigned char buf;
+
+  enum state_machine { START, FLAG_RCV, A_RCV, C_RCV, BCC_OK, STOP };
+
+  enum state_machine st = START;
+
+  unsigned char buf, addr, ctrl;
   int count = 0, ret = -1;
   while (count < 5) {
 
@@ -64,16 +68,72 @@ int readSupervisionFrame(int fd) {
       exit(-1);
     }
 
-    if (buf == 0x03)
-      printf("Received 0x03\n");
-    else if (buf == 0x00)
-      printf("Received 0x00\n");
-    else if (buf == 0x01)
-      printf("Received 0x01\n");
-    else if (buf == 0x07)
-      printf("Received 0x07\n");
-    else
-      printf("Received a %c\n", buf);
+    switch (st) {
+    case START:
+      switch (buf) {
+      case FLAG:
+        st = FLAG_RCV;
+        break;
+      default:
+        break;
+      }
+      break;
+    case FLAG_RCV:
+      switch (buf) {
+      case A_SEND_CMD_ADDR:
+      case A_RECV_CMD_ADDR:
+        st = A_RCV;
+        addr = buf;
+        break;
+      case FLAG:
+        break;
+      default:
+        st = START;
+        break;
+      }
+      break;
+    case A_RCV:
+      switch (buf) {
+      case C_SET:
+      case C_UA:
+        st = C_RCV;
+        ctrl = buf;
+        break;
+      case FLAG:
+        st = FLAG_RCV;
+        break;
+      default:
+        st = START;
+        break;
+      }
+      break;
+    case C_RCV:
+      switch (buf) {
+      case FLAG:
+        st = FLAG_RCV;
+        break;
+      default:
+        if (buf == BCC1(addr, ctrl)) {
+          st = STOP;
+        } else {
+          st = START;
+        }
+        break;
+      }
+      break;
+    case BCC_OK:
+      switch (buf) {
+      case FLAG:
+        st = STOP;
+        break;
+      default:
+        st = START;
+        break;
+      }
+      break;
+    case STOP:
+      return SU_FRAME_SIZE;
+    }
 
     count++;
     sleep(1);
@@ -104,7 +164,7 @@ int llopen(int fd, bool role) {
       exit(-1);
     }
 
-    printf("Received UA frame");
+    printf("Received UA frame\n");
 
     return fd;
 
@@ -118,7 +178,7 @@ int llopen(int fd, bool role) {
       exit(-1);
     }
 
-    printf("Received SET frame");
+    printf("Received SET frame\n");
 
     ret = writeSupervisionFrame(fd, A_RECV_CMD_ADDR, C_UA);
 
