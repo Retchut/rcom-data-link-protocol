@@ -6,12 +6,11 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include "defines.h"
 #include "ll.h"
 
-#define BAUDRATE B38400
 #define SERIAL_PORT_SEND "/dev/ttyS10"
 #define SERIAL_PORT_RECV "/dev/ttyS11"
-#define _POSIX_SOURCE 1 /* POSIX compliant source */
 
 static struct termios old_termio;
 static int serial_port_fd;
