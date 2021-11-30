@@ -11,73 +11,74 @@ int llopen(int fd, bool role) {
   if (role == TRANSMITTER) {
     int ret;
 
-    for (int i = 0; i < 3; i++) {
-      for (int i = 0; i < 3; i++) {
-        ret = writeSupervisionFrame(fd, A_SEND_CMD_ADDR, C_SET);
-        if (ret != SU_FRAME_SIZE) {
-          sleep(2);
-        } else {
-          printf("Sent SET frame\n");
-          break;
-        }
-      }
+    for (int i = 0; i < NUM_TRIES; i++) {
 
-      if (ret != SU_FRAME_SIZE) {
-        fprintf(stderr, "Error writing SET Frame\n");
+      ret = writeSupervisionAndRetry(fd, A_SEND_ADDR, C_SET);
+
+      if (ret != 0) {
         continue;
       }
 
       ret = readSupervisionFrame(fd);
 
       if (ret != SU_FRAME_SIZE || get_ctrl() != C_UA) {
-        fprintf(stderr, "Error reading UA Frame\n");
+        continue;
       } else {
-        printf("Received UA frame\n");
         return fd;
       }
     }
-
-    fprintf(stderr, "Error establishing communication\n");
 
     return -1;
 
   } else if (role == RECEIVER) {
     int ret;
-    for (int i = 0; i < 3; i++) {
-      for (int i = 0; i < 3; i++) {
-        ret = readSupervisionFrame(fd);
-        if (ret != SU_FRAME_SIZE) {
-          sleep(2);
-        } else {
-          printf("Received SET frame\n");
-          break;
-        }
-      }
+    for (int i = 0; i < NUM_TRIES; i++) {
+
+      ret = readSupervisionFrame(fd);
 
       if (ret != SU_FRAME_SIZE || get_ctrl() != C_SET) {
-        fprintf(stderr, "Error reading SET frame\n");
         continue;
       }
 
-      for (int i = 0; i < 3; i++) {
-        ret = writeSupervisionFrame(fd, A_RECV_CMD_ADDR, C_UA);
-        if (ret != SU_FRAME_SIZE) {
-          sleep(2);
-        } else {
-          printf("Sent UA frame\n");
-          break;
-        }
-      }
+      ret = writeSupervisionAndRetry(fd, A_RECV_ADDR, C_UA);
 
-      if (ret != SU_FRAME_SIZE) {
-        fprintf(stderr, "Error writing UA frame\n");
+      if (ret != 0) {
+        continue;
       } else {
-        printf("Wrote UA Frame \n");
         return fd;
       }
     }
     return -1;
   } else {
-    return -1;
+
+    return UNKNOW_ROLE;
   }
+}
+
+int llclose(int fd) {
+  int ret;
+
+  for (int i = 0; i < NUM_TRIES; i++) {
+    ret = writeSupervisionAndRetry(fd, A_SEND_ADDR, C_DISC);
+
+    if (ret != 0) {
+      continue;
+    } else {
+      break;
+    }
+
+    ret = readSupervisionFrame(fd);
+
+    if (ret != SU_FRAME_SIZE || get_ctrl() != C_DISC) {
+      continue;
+    } else {
+      break;
+    }
+  }
+
+  ret = writeSupervisionAndRetry(fd, A_SEND_ADDR, C_UA);
+  if (ret != 0)
+    return -1;
+
+  return 0;
 }
