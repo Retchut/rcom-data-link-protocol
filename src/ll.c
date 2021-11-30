@@ -9,7 +9,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "./ll.h"
+#include "ll.h"
+#include "state.h"
 
 unsigned char buildBCC2(unsigned char *data, size_t size) {
   unsigned char bcc2 = data[0];
@@ -54,89 +55,26 @@ int writeSupervisionFrame(int fd, unsigned char msg_addr,
 
 int readSupervisionFrame(int fd) {
 
-  enum state_machine { START, FLAG_RCV, A_RCV, C_RCV, BCC_OK, STOP };
+  unsigned char buf;
 
-  enum state_machine st = START;
+  int ret = -1;
 
-  unsigned char buf, addr, ctrl;
-  int count = 0, ret = -1;
-  while (count < 5) {
+  set_state(START);
+  time_t start_time = time(NULL), end_time = time(NULL);
+  while (difftime(start_time, end_time) < 3 && get_state() != STOP) {
 
     ret = read(fd, &buf, 1);
-
-    if (ret <= 0) {
+    if (ret == -1) {
+      perror("read: ");
       exit(-1);
     }
-
-    switch (st) {
-    case START:
-      switch (buf) {
-      case FLAG:
-        st = FLAG_RCV;
-        break;
-      default:
-        break;
-      }
-      break;
-    case FLAG_RCV:
-      switch (buf) {
-      case A_SEND_CMD_ADDR:
-      case A_RECV_CMD_ADDR:
-        st = A_RCV;
-        addr = buf;
-        break;
-      case FLAG:
-        break;
-      default:
-        st = START;
-        break;
-      }
-      break;
-    case A_RCV:
-      switch (buf) {
-      case C_SET:
-      case C_UA:
-        st = C_RCV;
-        ctrl = buf;
-        break;
-      case FLAG:
-        st = FLAG_RCV;
-        break;
-      default:
-        st = START;
-        break;
-      }
-      break;
-    case C_RCV:
-      switch (buf) {
-      case FLAG:
-        st = FLAG_RCV;
-        break;
-      default:
-        if (buf == BCC1(addr, ctrl)) {
-          st = STOP;
-        } else {
-          st = START;
-        }
-        break;
-      }
-      break;
-    case BCC_OK:
-      switch (buf) {
-      case FLAG:
-        st = STOP;
-        break;
-      default:
-        st = START;
-        break;
-      }
-      break;
-    case STOP:
-      return SU_FRAME_SIZE;
+    if (ret == 0) {
+      end_time = time(NULL);
+    } else {
+      end_time = time(&start_time);
     }
 
-    count++;
-    sleep(1);
+    handleState(buf);
   }
 
   return SU_FRAME_SIZE;
@@ -148,25 +86,21 @@ int llopen(int fd, bool role) {
 
     ret = writeSupervisionFrame(fd, A_SEND_CMD_ADDR, C_SET);
 
-    printf("Sent SET frame\n");
-
     if (ret != SU_FRAME_SIZE) {
-      perror("writeSupervisionFrame");
-      exit(-1);
+      sleep(2);
     }
 
-    sleep(2);
+    printf("Sent SET frame\n");
 
     ret = readSupervisionFrame(fd);
 
     if (ret != SU_FRAME_SIZE) {
       perror("readSupervisionFrame");
-      exit(-1);
     }
 
     printf("Received UA frame\n");
 
-    return fd;
+    return 0;
 
   } else if (role == RECEIVER) {
     int ret;
@@ -182,12 +116,12 @@ int llopen(int fd, bool role) {
 
     ret = writeSupervisionFrame(fd, A_RECV_CMD_ADDR, C_UA);
 
-    if (ret = SU_FRAME_SIZE) {
+    if (ret != SU_FRAME_SIZE) {
       perror("writeSupervisionFrame");
       exit(-1);
     }
 
-    printf("Sent UA frame");
+    printf("Sent UA frame\n");
 
     return fd;
   } else {
