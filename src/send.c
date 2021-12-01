@@ -2,25 +2,114 @@
 #include <unistd.h>
 
 #include "defines.h"
+#include "read.h"
 #include "send.h"
 
-int writeInformationFrame(int fd, unsigned char addr, unsigned char cmd,
-                          unsigned char *infoPtr, size_t infoSize) {
+static unsigned char build_BCC2(unsigned char *data, size_t size) {
+  unsigned char bcc2 = data[0];
 
-  unsigned char frame[I_FRAME_SIZE(infoSize)];
+  for (size_t p = 0; p < size; p++) {
+    bcc2 ^= data[p];
+  }
+
+  return bcc2;
+}
+
+static unsigned short stuff_byte(unsigned char byte) {
+  if (byte == 0x7e)
+    return 0x7d5e;
+  else if (byte == 0x7d)
+    return 0x7d5d;
+  else
+    return (byte << 4);
+}
+
+static int stuff_data(unsigned char *data, size_t data_size,
+                      unsigned char *stuffed_data) {
+
+  int data_idx = 0, stuffed_idx = 0;
+
+  for (; data_idx < data_size; data_idx++) {
+    if (data[data_idx] == FLAG) {
+      stuffed_data[stuffed_idx++] = ESCAPE;
+      stuffed_data[stuffed_idx++] = FLAG ^ 0x20;
+    } else if (data[data_idx] == ESCAPE) {
+      stuffed_data[stuffed_idx++] = ESCAPE;
+      stuffed_data[stuffed_idx++] = ESCAPE ^ 0x20;
+    } else {
+      stuffed_data[stuffed_idx++] = data[data_idx];
+    }
+  }
+
+  return stuffed_idx;
+}
+
+int writeInformationFrame(int fd, unsigned char addr, unsigned char *info_ptr,
+                          size_t info_size, int msg_nr) {
+
+  if (info_size <= 0)
+    return -1;
+
+  unsigned char stuffed_info[info_size * 2];
+  int stuffed_size = stuff_data(info_ptr, info_size, stuffed_info);
+
+  int ret = -1;
+  unsigned char frame[I_FRAME_SIZE(stuffed_size)];
 
   frame[0] = FLAG;
   frame[1] = addr;
-  frame[2] = cmd;
-  frame[3] = BCC1(addr, cmd);
+  frame[2] = C_S(msg_nr);
+  frame[3] = BCC1(addr, msg_nr);
 
-  // TODO: Byte stuff the info part of the message
-  // check if we're not building an information frame
-  memcpy(frame + 4, infoPtr, infoSize);
-  frame[infoSize + 4] = buildBCC2(infoPtr, infoSize);
-  frame[infoSize + 5] = FLAG;
+  memcpy(frame + 4, stuffed_info, stuffed_size);
 
-  return write(fd, frame, infoSize + 6);
+  unsigned char original_bcc2 = build_BCC2(info_ptr, info_size);
+  unsigned short stuffed_bcc2 = stuff_byte(original_bcc2);
+
+  if (((stuffed_bcc2 & 0xFF00) >> 4) == original_bcc2) {
+    frame[stuffed_size + 4] = original_bcc2;
+    frame[stuffed_size + 5] = FLAG;
+  } else {
+    frame[stuffed_size + 4] = ((stuffed_bcc2 & 0xFF00) >> 4);
+    frame[stuffed_size + 5] = (stuffed_bcc2 & 0x00FF);
+    frame[stuffed_size + 6] = FLAG;
+  }
+
+  write(fd, frame, I_FRAME_SIZE(stuffed_size));
+
+  return ret == I_FRAME_SIZE(stuffed_size) ? 0 : -1;
+}
+
+int writeInformationAndRetry(int fd, unsigned char addr,
+                             unsigned char *info_ptr, size_t info_size,
+                             int msg_nr) {
+  int current_attempt = 0;
+  int bytes_written = -1;
+  int ret = -1;
+  do {
+    current_attempt++;
+
+    bytes_written =
+        writeInformationFrame(fd, addr, info_ptr, info_size, msg_nr);
+
+    if (bytes_written != 0) {
+      continue;
+    }
+
+    ret = readInformationFrameResponse(fd);
+
+    if (ret == -1) {
+      continue;
+    } else if (ret == REJECTED) {
+      current_attempt = 0;
+      continue;
+    } else {
+      return bytes_written;
+    }
+
+  } while (current_attempt < NUM_TRIES);
+
+  return -1;
 }
 
 int writeSupervisionFrame(int fd, unsigned char msg_addr,
@@ -34,17 +123,6 @@ int writeSupervisionFrame(int fd, unsigned char msg_addr,
   buf[4] = FLAG;
 
   return write(fd, &buf, SU_FRAME_SIZE);
-}
-
-// TODO: Maybe make it static
-unsigned char buildBCC2(unsigned char *data, size_t size) {
-  unsigned char bcc2 = data[0];
-
-  for (size_t p = 0; p < size; p++) {
-    bcc2 ^= data[p];
-  }
-
-  return bcc2;
 }
 
 int writeSupervisionAndRetry(int fd, unsigned char msg_addr,
