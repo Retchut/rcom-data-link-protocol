@@ -63,12 +63,10 @@ int readInformationMessage(int fd, unsigned char *stuffed_msg) {
   unsigned char byte;
 
   int idx = 0;
-
   int ret = -1;
 
   set_state(START);
   time_t start_time = time(NULL), end_time = time(NULL);
-
   while (difftime(end_time, start_time) < 3 && get_state() != STOP) {
 
     ret = read(fd, &byte, 1);
@@ -90,5 +88,5 @@ int readInformationMessage(int fd, unsigned char *stuffed_msg) {
     }
   }
 
-  return difftime(end_time, start_time) < 3 ? 0 : -1;
+  return difftime(end_time, start_time) < 3 ? idx : -1;
 }
