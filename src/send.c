@@ -8,7 +8,7 @@
 static unsigned char build_BCC2(unsigned char *data, size_t size) {
   unsigned char bcc2 = data[0];
 
-  for (size_t p = 0; p < size; p++) {
+  for (size_t p = 1; p < size; p++) {
     bcc2 ^= data[p];
   }
 
@@ -66,7 +66,7 @@ int writeInformationFrame(int fd, unsigned char addr, unsigned char *info_ptr,
   unsigned char original_bcc2 = build_BCC2(info_ptr, info_size);
   unsigned short stuffed_bcc2 = stuff_byte(original_bcc2);
 
-  if (((stuffed_bcc2 & 0xFF00) >> 4) == original_bcc2) {
+  if ((stuffed_bcc2 >> 4) == original_bcc2) {
     frame[stuffed_size + 4] = original_bcc2;
     frame[stuffed_size + 5] = FLAG;
   } else {
@@ -75,7 +75,7 @@ int writeInformationFrame(int fd, unsigned char addr, unsigned char *info_ptr,
     frame[stuffed_size + 6] = FLAG;
   }
 
-  write(fd, frame, I_FRAME_SIZE(stuffed_size));
+  ret = write(fd, frame, I_FRAME_SIZE(stuffed_size));
 
   return ret == I_FRAME_SIZE(stuffed_size) ? 0 : -1;
 }
@@ -84,15 +84,13 @@ int writeInformationAndRetry(int fd, unsigned char addr,
                              unsigned char *info_ptr, size_t info_size,
                              int msg_nr) {
   int current_attempt = 0;
-  int bytes_written = -1;
   int ret = -1;
   do {
     current_attempt++;
 
-    bytes_written =
-        writeInformationFrame(fd, addr, info_ptr, info_size, msg_nr);
+    ret = writeInformationFrame(fd, addr, info_ptr, info_size, msg_nr);
 
-    if (bytes_written != 0) {
+    if (ret != 0) {
       continue;
     }
 
@@ -104,8 +102,8 @@ int writeInformationAndRetry(int fd, unsigned char addr,
       current_attempt = 0;
       continue;
     } else {
-      if ((ret >> 7) == (msg_nr % 2)) {
-        return bytes_written;
+      if (ret == (msg_nr % 2)) {
+        return info_size;
       } else {
         continue;
       }

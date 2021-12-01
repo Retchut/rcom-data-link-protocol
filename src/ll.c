@@ -135,7 +135,6 @@ int llwrite(int fd, unsigned char *buffer, unsigned int length) {
     ret = writeInformationAndRetry(fd, A_SEND_CMD, buffer, length, frame_nr);
 
     if (ret != -1) {
-      printf("Wrote Information Frame %d\n", frame_nr);
       frame_nr++;
       return ret;
     }

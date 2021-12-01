@@ -47,7 +47,7 @@ int readInformationFrameResponse(int fd) {
 
   unsigned char ctrl = get_ctrl();
   if (ctrl == C_RR0 || ctrl == C_RR1) {
-    return 0;
+    return (ctrl >> 7);
   }
 
   if (ctrl == C_REJ0 || ctrl == C_REJ1) {

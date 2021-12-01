@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
     }
   } else if (role == RECEIVER) {
 
-    writeSupervisionFrame(fd, A_RECV_RSP, C_REJ(0));
+    writeSupervisionFrame(fd, A_RECV_RSP, C_RR(0));
   }
 
   if (llclose(fd) == -1) {
