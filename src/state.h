@@ -6,7 +6,9 @@ typedef enum {
   FLAG_RCV,
   A_RCV,
   C_RCV,
+  I_MSG, // Switch state for I_MSG
   BCC_OK,
+  DATA_RCV,
   STOP // Success state
 } state_t;
 
@@ -14,7 +16,6 @@ typedef struct {
   state_t current_st;
   unsigned char addr;
   unsigned char ctrl;
-
 } state_machine;
 
 void handleState(unsigned char byte);

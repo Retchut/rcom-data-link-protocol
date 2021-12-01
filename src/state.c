@@ -54,6 +54,11 @@ static void handle_a_rcv(unsigned char byte) {
     set_state(C_RCV);
     set_ctrl(byte);
     break;
+  case C_S0:
+  case C_S1:
+    set_state(I_MSG);
+    set_ctrl(byte);
+    break;
   case FLAG:
     set_state(FLAG_RCV);
     break;
@@ -89,6 +94,31 @@ static void handle_bcc_ok(unsigned char byte) {
   }
 }
 
+static void handle_i_msg(unsigned char byte) {
+  switch (byte) {
+  case FLAG:
+    set_state(FLAG_RCV);
+    break;
+  default:
+    if (byte == (BCC1(get_addr(), get_ctrl()))) {
+      set_state(DATA_RCV);
+    } else {
+      set_state(START);
+    }
+    break;
+  }
+}
+
+static void handle_data_rcv(unsigned char byte) {
+  switch (byte) {
+  case FLAG:
+    set_state(STOP);
+    break;
+  default:
+    break;
+  }
+}
+
 void handleState(unsigned char byte) {
 
   switch (get_state()) {
@@ -107,6 +137,12 @@ void handleState(unsigned char byte) {
   case BCC_OK:
     handle_bcc_ok(byte);
     break;
+
+  case I_MSG:
+    handle_i_msg(byte);
+    break;
+  case DATA_RCV:
+    handle_data_rcv(byte);
 
   case STOP:
     return;
