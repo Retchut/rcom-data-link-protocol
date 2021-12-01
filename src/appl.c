@@ -41,6 +41,15 @@ int generateControlPacket(unsigned char *ctrlPacket, struct fileData *fData, int
     return 0;
 }
 
+void generateDataPacket(unsigned char *dataPacket, struct fileData *fData, unsigned char *data, unsigned int dataSize, int seqN){
+    //TODO; check if these l1 and l2 are correct
+    unsigned int l1 = DATA_CHUNK_SIZE % 256;
+    unsigned int l2 = DATA_CHUNK_SIZE / 256;
+    unsigned int dataPacketHeader[4] = {PACKET_DATA, seqN, l1, l2};
+    memcpy(dataPacket, dataPacketHeader, 4);
+    memcpy(dataPacket+4, data, dataSize);
+}
+
 int write(int portfd, char *fileName){
     FILE *filePtr = fopen(fileName, "r");
     if(filePtr == NULL){
@@ -69,19 +78,26 @@ int write(int portfd, char *fileName){
     }
 
     //Iterate through file, create and send Data Packets
-    unsigned int packetsRead = 0;
+    unsigned int packetsSent = 0;
     while(!feof(filePtr)){
         //read data
-        unsigned int dataSize = (packetsRead < fData.fullPackets) ? DATA_CHUNK_SIZE : fData.leftover;
+        unsigned int dataSize = (packetsSent < fData.fullPackets) ? DATA_CHUNK_SIZE : fData.leftover;
         unsigned char data[dataSize];
         for(size_t i = 0; i < dataSize; i++){
             data[i] = fgetc(filePtr);
         }
-        packetsRead++;
 
         //Create Data Packet
+        unsigned int dataPacketSize = DATA_PACKET_SIZE(dataSize);
+        unsigned char dataPacket[dataPacketSize];
+        generateDataPacket(dataPacket, &fData, data, dataSize, packetsSent % 1);
 
         //Send Data Packet
+        if(llwrite(portfd, dataPacket, dataPacketSize) != 0){
+            printf("Error sending data packet number %u.\n", packetsSent);
+            return -1;
+        }
+        packetsSent++;
     }
     
     //Set up End Control Packet

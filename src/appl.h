@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 #define DATA_CHUNK_SIZE             1024
-#define DATA_PACKET_SIZE            DATA_CHUNK_SIZE + 4
+#define DATA_PACKET_SIZE(dSize)     dSize + 4
 #define CTRL_PACKET_SIZE(l1, l2)    5+l1+l2
 
 #define PACKET_DATA         1
@@ -39,6 +39,17 @@ int retrieveFileData(struct fileData *fData, FILE *filePtr, char *fileName);
  * @return 0 on success, -1 otherwise
  */
 int generateControlPacket(unsigned char *ctrlPacket, struct fileData *fData, int start);
+
+/**
+ * @brief Generates a data packet from a file's content
+ * 
+ * @param dataPacket    Pointer to the packet where we're storing data
+ * @param fData         Misc filedata
+ * @param data          Data we're storing in the packet
+ * @param dataSize      Size of the data in the packet
+ * @param seqN          Sequence number
+ */
+void generateDataPacket(unsigned char *dataPacket, struct fileData *fData, unsigned char *data, unsigned int dataSize, int seqN);
 
 /**
  * @brief Creates packets from file and sends them to the receiver
