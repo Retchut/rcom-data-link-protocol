@@ -7,7 +7,7 @@ int llopen(int fd, bool transmitter);
 
 int llclose(int fd);
 
-int llwrite(int fd, unsigned char *buffer, int length);
+int llwrite(int fd, unsigned char *buffer, unsigned int length);
 
 int llread(int fd, unsigned char *buffer);
 
