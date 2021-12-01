@@ -20,6 +20,7 @@ struct fileData{
     unsigned int fileNameSize;
     unsigned int fileSize;
     unsigned int fullPackets;
+    unsigned int leftover;
 };
 
 /**

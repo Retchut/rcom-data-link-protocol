@@ -17,6 +17,7 @@ int retrieveFileData(struct fileData *fData, FILE *filePtr, char *fileName){
     fData->fileNameSize = (unsigned int) strlen(fileName);
     fData->fileSize = (unsigned int) fileStat.st_size;
     fData->fullPackets = fData->fileSize / DATA_CHUNK_SIZE;
+    fData->leftover = fData->fileSize % DATA_CHUNK_SIZE;
 
     return 0;
 }
@@ -68,7 +69,20 @@ int write(int portfd, char *fileName){
     }
 
     //Iterate through file, create and send Data Packets
+    unsigned int packetsRead = 0;
+    while(!feof(filePtr)){
+        //read data
+        unsigned int dataSize = (packetsRead < fData.fullPackets) ? DATA_CHUNK_SIZE : fData.leftover;
+        unsigned char data[dataSize];
+        for(size_t i = 0; i < dataSize; i++){
+            data[i] = fgetc(filePtr);
+        }
+        packetsRead++;
 
+        //Create Data Packet
+
+        //Send Data Packet
+    }
     
     //Set up End Control Packet
     ctrlPacket[0] = PACKET_CTRL_END;
