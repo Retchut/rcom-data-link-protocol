@@ -18,8 +18,10 @@
 #define NUM_TRIES 3
 
 #define FLAG 0x7E
-#define A_SEND_ADDR 0x03
-#define A_RECV_ADDR 0x01
+#define A_SEND_CMD 0x03
+#define A_SEND_RSP 0x01
+#define A_RECV_CMD 0x01
+#define A_RECV_RSP 0x03
 #define C_INF(n) (n << 6)
 #define C_SET 0x03
 #define C_DISC 0x0B

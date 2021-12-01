@@ -70,7 +70,7 @@ int llopen(int port, bool role_p) {
 
     for (int i = 0; i < NUM_TRIES; i++) {
 
-      ret = writeSupervisionAndRetry(fd, A_SEND_ADDR, C_SET);
+      ret = writeSupervisionAndRetry(fd, A_SEND_CMD, C_SET);
 
       if (ret != 0) {
         continue;
@@ -80,7 +80,8 @@ int llopen(int port, bool role_p) {
 
       ret = readSupervisionFrame(fd);
 
-      if (ret != SU_FRAME_SIZE || get_ctrl() != C_UA) {
+      if (ret != SU_FRAME_SIZE || get_ctrl() != C_UA ||
+          get_addr() != A_RECV_RSP) {
         continue;
       } else {
         printf("Read UA frame\n");
@@ -96,13 +97,14 @@ int llopen(int port, bool role_p) {
 
       ret = readSupervisionFrame(fd);
 
-      if (ret != SU_FRAME_SIZE || get_ctrl() != C_SET) {
+      if (ret != SU_FRAME_SIZE || get_ctrl() != C_SET ||
+          get_addr() != A_SEND_CMD) {
         continue;
       }
 
       printf("Read SET frame\n");
 
-      ret = writeSupervisionAndRetry(fd, A_RECV_ADDR, C_UA);
+      ret = writeSupervisionAndRetry(fd, A_RECV_RSP, C_UA);
 
       if (ret != 0) {
         continue;
@@ -146,7 +148,7 @@ int llclose(int fd) {
   if (role == TRANSMITTER) {
 
     for (int i = 0; i < NUM_TRIES; i++) {
-      ret = writeSupervisionAndRetry(fd, A_SEND_ADDR, C_DISC);
+      ret = writeSupervisionAndRetry(fd, A_SEND_CMD, C_DISC);
 
       if (ret != 0) {
         continue;
@@ -156,13 +158,14 @@ int llclose(int fd) {
 
       ret = readSupervisionFrame(fd);
 
-      if (ret != SU_FRAME_SIZE || get_ctrl() != C_DISC) {
+      if (ret != SU_FRAME_SIZE || get_ctrl() != C_DISC ||
+          get_addr() != A_RECV_CMD) {
         continue;
       }
 
       printf("Read DISC frame\n");
 
-      ret = writeSupervisionAndRetry(fd, A_SEND_ADDR, C_UA);
+      ret = writeSupervisionAndRetry(fd, A_SEND_RSP, C_UA);
       if (ret != 0) {
         continue;
       } else {
@@ -178,13 +181,14 @@ int llclose(int fd) {
 
       ret = readSupervisionFrame(fd);
 
-      if (ret != SU_FRAME_SIZE || get_ctrl() != C_DISC) {
+      if (ret != SU_FRAME_SIZE || get_ctrl() != C_DISC ||
+          get_addr() != A_SEND_CMD) {
         continue;
       }
 
       printf("Read DISC frame\n");
 
-      ret = writeSupervisionAndRetry(fd, A_RECV_ADDR, C_DISC);
+      ret = writeSupervisionAndRetry(fd, A_RECV_CMD, C_DISC);
 
       if (ret != 0) {
         continue;
@@ -194,7 +198,8 @@ int llclose(int fd) {
 
       ret = readSupervisionFrame(fd);
 
-      if (ret != SU_FRAME_SIZE || get_ctrl() != C_UA) {
+      if (ret != SU_FRAME_SIZE || get_ctrl() != C_UA ||
+          get_addr() != A_SEND_RSP) {
         continue;
       } else {
         printf("Read UA frame\n");
