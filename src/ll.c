@@ -121,15 +121,27 @@ int llopen(int port, bool role_p) {
 }
 
 int llread(int fd, unsigned char *buffer) {
-
   printf("Reading\n");
-
   return 0;
 }
 
 int llwrite(int fd, unsigned char *buffer, unsigned int length) {
-  printf("Writing\n");
-  return 0;
+
+  static int frame_nr = 0;
+  int ret = -1;
+
+  for (int i = 0; i < NUM_TRIES; i++) {
+
+    ret = writeInformationAndRetry(fd, A_SEND_CMD, buffer, length, frame_nr);
+
+    if (ret != -1) {
+      printf("Wrote Information Frame %d\n", frame_nr);
+      frame_nr++;
+      return ret;
+    }
+  }
+
+  return -1;
 }
 
 static int reset_config(int fd) {
