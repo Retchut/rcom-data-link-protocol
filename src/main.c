@@ -39,14 +39,24 @@ int main(int argc, char *argv[]) {
 
   unsigned char buf[5] = "ABCDE";
 
+  buf[2] = 0x7E;
+
+  buf[4] = 0x7D;
+
   if (role == TRANSMITTER) {
     if (llwrite(fd, buf, 5) == -1) {
       fprintf(stderr, "Error writing to port \n");
       exit(-1);
     }
+
   } else if (role == RECEIVER) {
 
-    writeSupervisionFrame(fd, A_RECV_RSP, C_RR(0));
+    unsigned char buf[512];
+    if (llread(fd, buf) == -1) {
+      fprintf(stderr, "Error reading from port\n");
+    }
+
+    printf("Buf is now %s\n", buf);
   }
 
   if (llclose(fd) == -1) {
