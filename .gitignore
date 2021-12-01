@@ -1,3 +1,4 @@
 src/*.o
 src/recv
 src/send
+src/main
