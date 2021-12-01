@@ -3,10 +3,11 @@
 
 #include <stdbool.h>
 
-#define DATA_CHUNK_SIZE     1024
-#define DATA_PACKET_SIZE    DATA_CHUNK_SIZE + 4
-#define CTRL_PACKET_SIZE(l1, l2) 5+l1+l2
+#define DATA_CHUNK_SIZE             1024
+#define DATA_PACKET_SIZE            DATA_CHUNK_SIZE + 4
+#define CTRL_PACKET_SIZE(l1, l2)    5+l1+l2
 
+#define PACKET_DATA         1
 #define PACKET_CTRL_START   2
 #define PACKET_CTRL_END     3
 #define CTRL_FILE_SIZE      0
@@ -29,7 +30,7 @@ struct fileData{
 int retrieveFileData(struct fileData *fData, FILE *filePtr, char *fileName);
 
 /**
- * @brief Generates a control packet packets from a file and sends them to the receiver
+ * @brief Generates a control packet from a file's data
  * 
  * @param ctrlPacket    Pointer to the packet where we're storing data
  * @param fData         Struct holding the file's data

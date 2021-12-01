@@ -31,10 +31,10 @@ int generateControlPacket(unsigned char *ctrlPacket, struct fileData *fData, int
     //TLV1
     ctrlPacket[1] = CTRL_FILE_SIZE;
     ctrlPacket[2] = UNSIGNED_INT_SIZE; //handles file size up to around 4gb
-    ctrlPacket[3] = fData->fileSize; //TODO: write unsigned int holding size to data packet
+    memcpy(ctrlPacket+3, &(fData->fileSize), UNSIGNED_INT_SIZE);    //TODO; check if this is fine
     //TLV2
     ctrlPacket[3+UNSIGNED_INT_SIZE] = CTRL_FILE_NAME;
-    ctrlPacket[4+UNSIGNED_INT_SIZE] = fData->fileNameSize; //TODO: write unsigned int holding size to data packet
+    memcpy(ctrlPacket+4+UNSIGNED_INT_SIZE, &(fData->fileNameSize), 1);    //TODO; check if this is fine
     ctrlPacket[5+UNSIGNED_INT_SIZE] = fData->fileName;
 
     return 0;
@@ -68,6 +68,7 @@ int write(int portfd, char *fileName){
     }
 
     //Iterate through file, create and send Data Packets
+
     
     //Set up End Control Packet
     ctrlPacket[0] = PACKET_CTRL_END;
