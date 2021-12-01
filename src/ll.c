@@ -120,16 +120,77 @@ int llopen(int port, bool role_p) {
   }
 }
 
+// TODO: Move to another file, possibly utils
+int unstuff_frame(unsigned char *stuffed_msg, size_t size,
+                  unsigned char *unstuffed_msg) {
+
+  int stuffed_idx = 0, unstuffed_idx = 0;
+  for (; stuffed_idx < size; stuffed_idx++) {
+
+    if (stuffed_msg[stuffed_idx] == ESCAPE) {
+      stuffed_idx++;
+
+      if (stuffed_msg[stuffed_idx] == 0x5d) {
+        unstuffed_msg[unstuffed_idx++] = 0x7d;
+      } else if (stuffed_msg[stuffed_idx] == 0x5e) {
+        unstuffed_msg[unstuffed_idx++] = 0x7e;
+      } else {
+        return -1;
+      }
+    } else {
+      unstuffed_msg[unstuffed_idx++] = stuffed_msg[stuffed_idx];
+    }
+  }
+  return unstuffed_idx;
+}
+
 int llread(int fd, unsigned char *buffer) {
+  static int packet = 0;
 
   int ret = -1;
   unsigned char stuffed_msg[512 + 7];
+  unsigned char unstuffed_msg[512 + 7];
   for (int i = 0; i < NUM_TRIES; i++) {
 
     ret = readInformationMessage(fd, stuffed_msg);
+
+    if (ret == -1) {
+      continue;
+    }
+
+    ret = unstuff_frame(stuffed_msg, ret, unstuffed_msg);
+    size_t size = ret;
+
+    if (ret == -1) {
+      continue;
+    }
+
+    unsigned char unstuffed_bcc2 = unstuffed_msg[ret - 1];
+    unsigned char recv_data_bcc2 = build_BCC2(unstuffed_msg, ret);
+
+    if (unstuffed_bcc2 == recv_data_bcc2 && get_ctrl() == C_S(packet)) {
+      packet++;
+
+      ret = writeSupervisionAndRetry(fd, A_RECV_RSP, C_RR(packet % 2));
+
+      if (ret != 0) {
+        continue;
+      } else {
+        memcpy(buffer, unstuffed_msg, size);
+        return size;
+      }
+    } else if (unstuffed_bcc2 == recv_data_bcc2) {
+      ret = writeSupervisionAndRetry(fd, A_RECV_RSP, C_RR(packet % 2));
+      tcflush(fd, TCIFLUSH);
+      return -1;
+    } else {
+      ret = writeSupervisionAndRetry(fd, A_RECV_RSP, C_REJ(packet));
+      tcflush(fd, TCIFLUSH);
+      return -1;
+    }
   }
 
-  return 0;
+  return -1;
 }
 
 int llwrite(int fd, unsigned char *buffer, unsigned int length) {
