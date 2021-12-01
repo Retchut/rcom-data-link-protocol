@@ -46,6 +46,7 @@ int readInformationFrameResponse(int fd) {
   }
 
   unsigned char ctrl = get_ctrl();
+
   if (ctrl == C_RR0 || ctrl == C_RR1) {
     return (ctrl >> 7);
   }
@@ -81,12 +82,12 @@ int readInformationMessage(int fd, unsigned char *stuffed_msg) {
       end_time = time(&start_time);
     }
 
-    handleState(byte);
-
     if (get_state() == DATA_RCV) {
       stuffed_msg[idx++] = byte;
     }
+
+    handleState(byte);
   }
 
-  return difftime(end_time, start_time) < 3 ? idx : -1;
+  return difftime(end_time, start_time) < 3 ? idx - 1 : -1;
 }
