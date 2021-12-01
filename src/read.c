@@ -37,7 +37,7 @@ int readSupervisionFrame(int fd) {
   return difftime(end_time, start_time) < 3 ? SU_FRAME_SIZE : -1;
 }
 
-int readInformationFrameResponse(fd) {
+int readInformationFrameResponse(int fd) {
 
   int ret = readSupervisionFrame(fd);
 
