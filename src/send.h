@@ -16,4 +16,7 @@ int writeSupervisionFrame(int fd, unsigned char msg_addr,
 int writeSupervisionAndRetry(int fd, unsigned char msg_addr,
                              unsigned char msg_ctrl);
 
+// TODO: Move to a new place after, maybe utils
+unsigned char build_BCC2(unsigned char *data, size_t size);
+
 #endif /* _RCOM_SEND_H_ */

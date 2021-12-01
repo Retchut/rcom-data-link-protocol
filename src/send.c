@@ -5,7 +5,7 @@
 #include "read.h"
 #include "send.h"
 
-static unsigned char build_BCC2(unsigned char *data, size_t size) {
+unsigned char build_BCC2(unsigned char *data, size_t size) {
   unsigned char bcc2 = data[0];
 
   for (size_t p = 1; p < size; p++) {
