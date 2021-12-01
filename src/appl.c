@@ -110,3 +110,4 @@ int write(int portfd, char *fileName){
     }
 
     return 0;
+}
