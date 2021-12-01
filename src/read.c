@@ -58,3 +58,37 @@ int readInformationFrameResponse(int fd) {
     return -1;
   }
 }
+
+int readInformationMessage(int fd, unsigned char *stuffed_msg) {
+  unsigned char byte;
+
+  int idx = 0;
+
+  int ret = -1;
+
+  set_state(START);
+  time_t start_time = time(NULL), end_time = time(NULL);
+
+  while (difftime(end_time, start_time) < 3 && get_state() != STOP) {
+
+    ret = read(fd, &byte, 1);
+
+    if (ret == -1) {
+      perror("read");
+      exit(-1);
+    }
+    if (ret == 0) {
+      end_time = time(NULL);
+    } else {
+      end_time = time(&start_time);
+    }
+
+    handleState(byte);
+
+    if (get_state() == DATA_RCV) {
+      stuffed_msg[idx++] = byte;
+    }
+  }
+
+  return difftime(end_time, start_time) < 3 ? 0 : -1;
+}
