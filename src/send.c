@@ -2,7 +2,7 @@
 #include <unistd.h>
 
 #include "defines.h"
-#include "write.h"
+#include "send.h"
 
 int writeInformationFrame(int fd, unsigned char addr, unsigned char cmd,
                           unsigned char *infoPtr, size_t infoSize) {

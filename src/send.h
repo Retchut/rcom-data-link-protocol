@@ -1,5 +1,5 @@
-#ifndef WRITE_H_
-#define WRITE_H_
+#ifndef _RCOM_SEND_H_
+#define _RCOM_SEND_H_
 
 #include <stddef.h>
 
@@ -13,4 +13,4 @@ int writeSupervisionAndRetry(int fd, unsigned char msg_addr,
                              unsigned char msg_ctrl);
 
 unsigned char buildBCC2(unsigned char *data, size_t size);
-#endif // WRITE_H_
+#endif /* _RCOM_SEND_H_ */
