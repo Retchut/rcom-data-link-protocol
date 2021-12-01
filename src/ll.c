@@ -159,14 +159,15 @@ int llread(int fd, unsigned char *buffer) {
     }
 
     ret = unstuff_frame(stuffed_msg, ret, unstuffed_msg);
-    size_t size = ret;
+
+    size_t size = ret - 1;
 
     if (ret == -1) {
       continue;
     }
 
-    unsigned char unstuffed_bcc2 = unstuffed_msg[ret - 1];
-    unsigned char recv_data_bcc2 = build_BCC2(unstuffed_msg, ret);
+    unsigned char unstuffed_bcc2 = unstuffed_msg[size];
+    unsigned char recv_data_bcc2 = build_BCC2(unstuffed_msg, size);
 
     if (unstuffed_bcc2 == recv_data_bcc2 && get_ctrl() == C_S(packet)) {
       packet++;
@@ -196,6 +197,7 @@ int llread(int fd, unsigned char *buffer) {
 int llwrite(int fd, unsigned char *buffer, unsigned int length) {
 
   static int frame_nr = 0;
+
   int ret = -1;
 
   for (int i = 0; i < NUM_TRIES; i++) {
