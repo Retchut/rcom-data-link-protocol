@@ -36,3 +36,25 @@ int readSupervisionFrame(int fd) {
 
   return difftime(end_time, start_time) < 3 ? SU_FRAME_SIZE : -1;
 }
+
+int readInformationFrameResponse(fd) {
+
+  int ret = readSupervisionFrame(fd);
+
+  if (ret != SU_FRAME_SIZE) {
+    return -1;
+  }
+
+  unsigned char ctrl = get_ctrl();
+  if (ctrl == C_RR0 || ctrl == C_RR1) {
+    return 0;
+  }
+
+  if (ctrl == C_REJ0 || ctrl == C_REJ1) {
+    return REJECTED;
+  }
+
+  else {
+    return -1;
+  }
+}

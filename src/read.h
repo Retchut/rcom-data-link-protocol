@@ -3,4 +3,6 @@
 
 int readSupervisionFrame(int fd);
 
+int readInformationFrameResponse(int fd);
+
 #endif /* _RCOM_READ_H_ */
