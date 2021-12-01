@@ -29,8 +29,8 @@ static void handle_start(unsigned char byte) {
 static void handle_flag_rcv(unsigned char byte) {
   switch (byte) {
     // TODO: Add all other address flags
-  case A_SEND_CMD_ADDR:
-  case A_RECV_CMD_ADDR:
+  case A_SEND_ADDR:
+  case A_RECV_ADDR:
     set_state(A_RCV);
     set_addr(byte);
     break;
@@ -47,6 +47,7 @@ static void handle_a_rcv(unsigned char byte) {
     // TODO: Add all other control flags
   case C_SET:
   case C_UA:
+  case C_DISC:
     set_state(C_RCV);
     set_ctrl(byte);
     break;
