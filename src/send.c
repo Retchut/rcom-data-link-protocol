@@ -104,7 +104,11 @@ int writeInformationAndRetry(int fd, unsigned char addr,
       current_attempt = 0;
       continue;
     } else {
-      return bytes_written;
+      if ((ret >> 7) == (msg_nr % 2)) {
+        return bytes_written;
+      } else {
+        continue;
+      }
     }
 
   } while (current_attempt < NUM_TRIES);
