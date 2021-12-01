@@ -121,7 +121,14 @@ int llopen(int port, bool role_p) {
 }
 
 int llread(int fd, unsigned char *buffer) {
-  printf("Reading\n");
+
+  int ret = -1;
+  unsigned char stuffed_msg[512 + 7];
+  for (int i = 0; i < NUM_TRIES; i++) {
+
+    ret = readInformationMessage(fd, stuffed_msg);
+  }
+
   return 0;
 }
 
