@@ -111,3 +111,15 @@ int write(int portfd, char *fileName){
 
     return 0;
 }
+
+int receive(int portfd){
+    //read start packet
+
+    //create file with start packet values
+
+    //while loop to read and store file until we find the end packet
+
+    //close
+
+    return 0;
+}
