@@ -54,19 +54,28 @@ int write(int portfd, char *fileName){
     }
 
     //Set up start Control Packet
-    unsigned char ctrlPacket[CTRL_PACKET_SIZE(UNSIGNED_INT_SIZE, fData.fileNameSize)];
+    unsigned int ctrlPacketSize = CTRL_PACKET_SIZE(UNSIGNED_INT_SIZE, fData.fileNameSize);
+    unsigned char ctrlPacket[ctrlPacketSize];
     if(generateControlPacket(ctrlPacket, &fData, PACKET_CTRL_START) != 0){
         printf("Error creating the start control packet.\n");
         return 1;
     }
     
     //Send start Control Packet
+    if(llwrite(portfd, ctrlPacket, ctrlPacketSize) != 0){
+        printf("Error sending start control Packet.\n");
+        return -1;
+    }
 
     //Iterate through file, create and send Data Packets
     
     //Set up End Control Packet
     ctrlPacket[0] = PACKET_CTRL_END;
-    
+
     //Send End Control Packet
+    if(llwrite(portfd, ctrlPacket, ctrlPacketSize) != 0){
+        printf("Error sending end control Packet.\n");
+        return -1;
+    }
 
     return 0;
