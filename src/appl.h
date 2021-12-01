@@ -60,7 +60,7 @@ void generateDataPacket(unsigned char *dataPacket, struct fileData *fData,
  * @param portfd    File Descriptor of the serial port
  * @param fileName  Name of the file to send
  */
-int write(int portfd, char *fileName);
+int sendFile(int portfd, char *fileName);
 
 /**
  * @brief Receives packets from the transmitter and decodes them

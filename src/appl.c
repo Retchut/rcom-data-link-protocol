@@ -54,7 +54,7 @@ void generateDataPacket(unsigned char *dataPacket, struct fileData *fData,
   memcpy(dataPacket + 4, data, dataSize);
 }
 
-int write(int portfd, char *fileName) {
+int sendFile(int portfd, char *fileName) {
   FILE *filePtr = fopen(fileName, "r");
   if (filePtr == NULL) {
     perror("fopen");
