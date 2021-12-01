@@ -5,7 +5,9 @@
 
 int llopen(int fd, bool transmitter);
 
-int llclose(int fd);
+int llclose_send(int fd);
+
+int llclose_recv(int fd);
 
 int llwrite(int fd, unsigned char *buffer, unsigned int length);
 
