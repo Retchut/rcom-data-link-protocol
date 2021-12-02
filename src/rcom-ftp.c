@@ -30,38 +30,20 @@ int retrieveFileData(struct fileData *fData, FILE *filePtr, char *fileName) {
 
 int generateControlPacket(unsigned char *ctrlPacket, struct fileData *fData,
                           int start) {
-  printf("generatectrl 0.\n");
   if (start != PACKET_CTRL_START && start != PACKET_CTRL_END) {
     return -1;
   }
-  printf("generatectrl 1.\n");
 
   // Control field
   ctrlPacket[0] = start;
-  printf("generatectrl 2.\n");
   // TLV1
   ctrlPacket[1] = CTRL_FILE_SIZE;
-  printf("generatectrl 3.\n");
   ctrlPacket[2] = FILE_SIZE_BYTES;
-  printf("generatectrl 4.\n");
   memcpy(ctrlPacket + 3, &(fData->fileSize), FILE_SIZE_BYTES);
-  printf("\n%x\n", fData->fileSize);
-  printf("%x\n", ctrlPacket[3]);
-  printf("%x\n", ctrlPacket[4]);
-  printf("%x\n", ctrlPacket[5]);
-  printf("%x\n\n", ctrlPacket[6]);
-  printf("generatectrl 5.\n");
   // TLV2
   ctrlPacket[3 + FILE_SIZE_BYTES] = CTRL_FILE_NAME;
-  printf("generatectrl 6.\n");
   memcpy(ctrlPacket + 4 + FILE_SIZE_BYTES, &(fData->fileNameSize), 1);
-  printf("generatectrl 7.\n");
-  printf("fdata->fileName %s\n", fData->fileName);
-  printf("fdata->fileSize %d\n", fData->fileSize);
-  memcpy(ctrlPacket + 5 + FILE_SIZE_BYTES, fData->fileName,
-         fData->fileNameSize);
-
-  printf("generatectrl end.\n");
+  memcpy(ctrlPacket + 5 + FILE_SIZE_BYTES, fData->fileName, fData->fileNameSize);
   return 0;
 }
 
@@ -75,44 +57,40 @@ void generateDataPacket(unsigned char *dataPacket, struct fileData *fData,
 }
 
 int sendFile(int portfd, char *fileName) {
-  printf("sendFile 0.\n");
   FILE *filePtr = fopen(fileName, "r");
-  printf("sendFile 1.\n");
   if (filePtr == NULL) {
     perror("fopen");
     return 1;
   }
-  printf("sendFile 2.\n");
+  printf("Opened file.\n");
 
   struct fileData fData;
   if (retrieveFileData(&fData, filePtr, fileName) != 0) {
     printf("Error retrieving the file's data.\n");
     return 1;
   }
-  printf("sendFile 3.\n");
+  printf("Successfully retrieved the file's data.\n");
 
   // Set up start Control Packet
   unsigned int ctrlPacketSize =
       CTRL_PACKET_SIZE(FILE_SIZE_BYTES, fData.fileNameSize);
-  printf("sendFile 4.\n");
   unsigned char ctrlPacket[ctrlPacketSize];
-  printf("sendFile 5.\n");
   if (generateControlPacket(ctrlPacket, &fData, PACKET_CTRL_START) != 0) {
     printf("Error creating the start control packet.\n");
     return 1;
   }
-  printf("sendFile 6.\n");
+  printf("Successfully generated the Start Control Packet.\n");
 
   // Send start Control Packet
-  printf("before sending start packet.\n");
   if (llwrite(portfd, ctrlPacket, ctrlPacketSize) != ctrlPacketSize) {
     printf("Error sending start control Packet.\n");
     return -1;
   }
-  printf("after sending start packet.\n");
 
   // Iterate through file, create and send Data Packets
   unsigned int packetsSent = 0;
+  unsigned int allPackets = (fData.leftover == 0) ? fData.fullPackets : fData.fullPackets + 1;
+  printf("Sending packets...\n");
   while (!feof(filePtr)) {
     // read data
     unsigned int dataSize = (packetsSent < fData.fullPackets)
@@ -134,16 +112,26 @@ int sendFile(int portfd, char *fileName) {
       return -1;
     }
     packetsSent++;
+    printf("Sent %u out of %u packets.\n", packetsSent, allPackets);
   }
+  printf("All %u packets sent.\n", allPackets);
 
   // Set up End Control Packet
   ctrlPacket[0] = PACKET_CTRL_END;
+  printf("Successfully generated the End Control Packet.\n");
 
   // Send End Control Packet
   if (llwrite(portfd, ctrlPacket, ctrlPacketSize) != ctrlPacketSize) {
     printf("Error sending end control Packet.\n");
     return -1;
   }
+  printf("Successfully wrote the End Control Packet.\n");
+
+  if(fclose(filePtr) != 0){
+    perror("fclose");
+    return 1;
+  }
+  printf("Successfully closed the file.\n");
 
   return 0;
 }
@@ -222,15 +210,15 @@ int readEndPacket(int portfd) {
 int receiveFile(int portfd) {
   // read start packet
   struct fileData fData;
-  printf("before reading start packet.\n");
   if (readStartPacket(portfd, &fData) != 0) {
     printf("Error reading the start packet.\n");
     return 1;
   }
-  printf("after reading start packet.\n");
+  printf("Successfully read the start packet and retrieved the file's data.\n");
 
   // DEBUG!!!!!
   FILE *fp = fopen("Pinguim-received.gif", "w");
+  printf("Created file.\n");
 
   // create file with start packet values
   // FILE *fp = fopen(fData.fileName, "w");
@@ -239,7 +227,9 @@ int receiveFile(int portfd) {
   // fputc('\0', fp);
   // fseek(fp, 0, SEEK_SET);
 
+  printf("Receiving packets...\n");
   unsigned int packetsRecvd = 0;
+  unsigned int allPackets = (fData.leftover == 0) ? fData.fullPackets : fData.fullPackets + 1;
   while (true) {
     unsigned int dataSize = (packetsRecvd < fData.fullPackets)
                                 ? MAX_DATA_CHUNK_SIZE
@@ -262,24 +252,26 @@ int receiveFile(int portfd) {
       return 1;
     }
     packetsRecvd++;
+    printf("Received %u out of %u packets.\n", packetsRecvd, allPackets);
 
     // break if we have read all packets
-    unsigned int allPackets =
-        (fData.leftover == 0) ? fData.fullPackets : fData.fullPackets + 1;
     if (packetsRecvd == allPackets)
       break;
   }
+  printf("All %u packets received.\n", allPackets);
 
   if (readEndPacket(portfd) != 0) {
     printf("Error reading the end packet.\n");
     return 1;
   }
+  printf("Successfully read the End Control Packet.\n");
 
   // close
   if (fclose(fp) != 0) {
     printf("Error closing the file.\n");
     return 1;
   }
+  printf("Successfully closed the file.\n");
 
   return 0;
 }
