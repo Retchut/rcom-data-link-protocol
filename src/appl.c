@@ -32,14 +32,14 @@ int generateControlPacket(unsigned char *ctrlPacket, struct fileData *fData,
   ctrlPacket[0] = start;
   // TLV1
   ctrlPacket[1] = CTRL_FILE_SIZE;
-  ctrlPacket[2] = UNSIGNED_INT_SIZE; // handles file size up to around 4gb
+  ctrlPacket[2] = FILE_SIZE_BYTES; // handles file size up to around 4gb
   memcpy(ctrlPacket + 3, &(fData->fileSize),
-         UNSIGNED_INT_SIZE); // TODO; check if this is fine
+         FILE_SIZE_BYTES); // TODO; check if this is fine
   // TLV2
-  ctrlPacket[3 + UNSIGNED_INT_SIZE] = CTRL_FILE_NAME;
-  memcpy(ctrlPacket + 4 + UNSIGNED_INT_SIZE, &(fData->fileNameSize),
+  ctrlPacket[3 + FILE_SIZE_BYTES] = CTRL_FILE_NAME;
+  memcpy(ctrlPacket + 4 + FILE_SIZE_BYTES, &(fData->fileNameSize),
          1); // TODO; check if this is fine
-  ctrlPacket[5 + UNSIGNED_INT_SIZE] = *fData->fileName;
+  ctrlPacket[5 + FILE_SIZE_BYTES] = *fData->fileName;
 
   return 0;
 }
@@ -69,7 +69,7 @@ int sendFile(int portfd, char *fileName) {
 
   // Set up start Control Packet
   unsigned int ctrlPacketSize =
-      CTRL_PACKET_SIZE(UNSIGNED_INT_SIZE, fData.fileNameSize);
+      CTRL_PACKET_SIZE(FILE_SIZE_BYTES, fData.fileNameSize);
   unsigned char ctrlPacket[ctrlPacketSize];
   if (generateControlPacket(ctrlPacket, &fData, PACKET_CTRL_START) != 0) {
     printf("Error creating the start control packet.\n");
@@ -118,8 +118,8 @@ int sendFile(int portfd, char *fileName) {
   return 0;
 }
 
-int receive(int portfd) {
-  // read start packet
+int receiveFile(int portfd) {
+
 
   // create file with start packet values
 

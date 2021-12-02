@@ -7,13 +7,14 @@
 #define DATA_CHUNK_SIZE 1024
 #define DATA_PACKET_SIZE(dSize) dSize + 4
 #define CTRL_PACKET_SIZE(l1, l2) 5 + l1 + l2
+#define MAX_CTRL_PACKET_SIZE    255
+#define FILE_SIZE_BYTES         4
 
 #define PACKET_DATA 1
 #define PACKET_CTRL_START 2
 #define PACKET_CTRL_END 3
 #define CTRL_FILE_SIZE 0
 #define CTRL_FILE_NAME 1
-#define UNSIGNED_INT_SIZE 4
 
 struct fileData {
   FILE *filePtr;             // Pointer to the file
@@ -67,6 +68,6 @@ int sendFile(int portfd, char *fileName);
  *
  * @param portfd    File Descriptor of the serial port
  */
-int receive(int portfd);
+int receiveFile(int portfd);
 
 #endif /* _RCOM_APPL_H_ */
