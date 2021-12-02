@@ -85,8 +85,9 @@ int sendFile(int portfd, char *fileName) {
   unsigned int packetsSent = 0;
   while (!feof(filePtr)) {
     // read data
-    unsigned int dataSize =
-        (packetsSent < fData.fullPackets) ? MAX_DATA_CHUNK_SIZE : fData.leftover;
+    unsigned int dataSize = (packetsSent < fData.fullPackets)
+                                ? MAX_DATA_CHUNK_SIZE
+                                : fData.leftover;
     unsigned char data[dataSize];
     for (size_t i = 0; i < dataSize; i++) {
       data[i] = fgetc(filePtr);
@@ -117,58 +118,69 @@ int sendFile(int portfd, char *fileName) {
   return 0;
 }
 
-int readStartPacket(int portfd, struct fileData *fData){
+int readStartPacket(int portfd, struct fileData *fData) {
   unsigned char startPacket[MAX_CTRL_PACKET_SIZE];
-  if(llread(portfd, startPacket) != 0){
+  if (llread(portfd, startPacket) != 0) {
     return 1;
   }
 
-  if(startPacket[0] != PACKET_CTRL_START){
+  if (startPacket[0] != PACKET_CTRL_START) {
     printf("Did not receive the start packet.\n");
     return 1;
   }
 
   fData->filePtr = NULL;
-  memcpy(&(fData->fileSize), startPacket+3, FILE_SIZE_BYTES);
-  memcpy(&(fData->fileNameSize), startPacket+3+FILE_SIZE_BYTES+2);
-  memcpy(&(fData->fileName), startPacket+3+FILE_SIZE_BYTES+3, fData->fileNameSize);
+  memcpy(&(fData->fileSize), startPacket + 3, FILE_SIZE_BYTES);
+  memcpy(&(fData->fileNameSize), startPacket + 3 + FILE_SIZE_BYTES + 2, 1);
+  memcpy(&(fData->fileName), startPacket + 3 + FILE_SIZE_BYTES + 3,
+         fData->fileNameSize);
   fData->fullPackets = fData->fileSize / MAX_DATA_CHUNK_SIZE;
   fData->leftover = fData->fileSize % MAX_DATA_CHUNK_SIZE;
 
   return 0;
 }
 
-int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize){
+int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize,
+                   unsigned int expPacketNum) {
   unsigned char dataPacket[dataSize];
-  if(llread(portfd, dataPacket) != 0){
+  if (llread(portfd, dataPacket) != 0) {
     return 1;
   }
 
-  if(dataPacket[0] != PACKET_DATA){
+  if (dataPacket[0] != PACKET_DATA) {
     printf("Did not receive a data packet.\n");
     return 1;
   }
 
-  //TODO: descobrir porque é que preciso do N (número de sequência (módulo 255))
+  unsigned int n = dataPacket[1];
 
-  unsigned int l1, l2, readSize;
-  memcpy(l1, dataPacket + 3, 1);
-  memcpy(l2, dataPacket + 2, 1);
-  readSize = 256*l2 + l1;
-  for(size_t p=0; p < readSize; p++){
-    data[p] = dataPacket[4+p];
+  // if we receive the previous packet(already read)
+  if (n == ((expPacketNum - 1 + 256) % 256)) {
+    return 2;
+  }
+  // if we receive a packet ahead
+  else if (n == ((expPacketNum + 1) % 256)) {
+    printf("Received a packet in advance... aborting.\n");
+    return 1;
+  }
+
+  unsigned int l2 = dataPacket[2];
+  unsigned int l1 = dataPacket[3];
+  unsigned int readSize = 256 * l2 + l1;
+  for (size_t p = 0; p < readSize; p++) {
+    data[p] = dataPacket[4 + p];
   }
 
   return 0;
 }
 
-int readEndPacket(int portfd){
+int readEndPacket(int portfd) {
   unsigned char startPacket[MAX_CTRL_PACKET_SIZE];
-  if(llread(portfd, startPacket) != 0){
+  if (llread(portfd, startPacket) != 0) {
     return 1;
   }
 
-  if(startPacket[0] != PACKET_CTRL_END){
+  if (startPacket[0] != PACKET_CTRL_END) {
     printf("Did not receive the end packet.\n");
     return 1;
   }
@@ -179,7 +191,7 @@ int readEndPacket(int portfd){
 int receiveFile(int portfd) {
   // read start packet
   struct fileData fData;
-  if(readStartPacket(portfd, &fData) != 0){
+  if (readStartPacket(portfd, &fData) != 0) {
     printf("Error reading the start packet.\n");
     return 1;
   }
@@ -191,34 +203,43 @@ int receiveFile(int portfd) {
   // fseek(fp, 0, SEEK_SET);
 
   unsigned int packetsRecvd = 0;
-  while(true){
-    unsigned int dataSize = (packetsRecvd < fData.fullPackets) ? MAX_DATA_CHUNK_SIZE : fData.leftover;
+  while (true) {
+    unsigned int dataSize = (packetsRecvd < fData.fullPackets)
+                                ? MAX_DATA_CHUNK_SIZE
+                                : fData.leftover;
     unsigned char data[dataSize];
 
-    if(readDataPacket(portfd, data, dataSize) != 0){
+    unsigned int expPacketNum = (packetsRecvd + 1) % 256;
+    if (readDataPacket(portfd, data, dataSize, expPacketNum) == 2) {
+      printf("Received duplicate packet number %u... ignoring.\n",
+             packetsRecvd);
+      continue;
+    } else if (readDataPacket(portfd, data, dataSize, expPacketNum) != 0) {
       printf("Error receiving data packet number %u.\n", packetsRecvd);
       return 1;
     }
 
-    //write data to file
-    if(fwrite(data, 1, dataSize, fp) != dataSize){
+    // write data to file
+    if (fwrite(data, 1, dataSize, fp) != dataSize) {
       printf("Error writing data packet number %u.\n", packetsRecvd);
       return 1;
     }
     packetsRecvd++;
 
-    //break if we have read all packets
-    unsigned int allPackets = (fData.leftover == 0) ? fData.fullPackets : fData.fullPackets + 1;
-    if(packetsRecvd == allPackets) break;
+    // break if we have read all packets
+    unsigned int allPackets =
+        (fData.leftover == 0) ? fData.fullPackets : fData.fullPackets + 1;
+    if (packetsRecvd == allPackets)
+      break;
   }
 
-  if(readEndPacket(portfd) != 0){
+  if (readEndPacket(portfd) != 0) {
     printf("Error reading the end packet.\n");
     return 1;
   }
 
   // close
-  if(fclose(fp) != 0){
+  if (fclose(fp) != 0) {
     printf("Error closing the file.\n");
     return 1;
   }
