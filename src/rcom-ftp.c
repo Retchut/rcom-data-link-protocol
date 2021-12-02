@@ -129,7 +129,7 @@ int sendFile(int portfd, char *fileName) {
     generateDataPacket(dataPacket, &fData, data, dataSize, packetsSent % 1);
 
     // Send Data Packet
-    if (llwrite(portfd, dataPacket, dataPacketSize) != 0) {
+    if (llwrite(portfd, dataPacket, dataPacketSize) != ctrlPacketSize) {
       printf("Error sending data packet number %u.\n", packetsSent);
       return -1;
     }
@@ -140,7 +140,7 @@ int sendFile(int portfd, char *fileName) {
   ctrlPacket[0] = PACKET_CTRL_END;
 
   // Send End Control Packet
-  if (llwrite(portfd, ctrlPacket, ctrlPacketSize) != 0) {
+  if (llwrite(portfd, ctrlPacket, ctrlPacketSize) != ctrlPacketSize) {
     printf("Error sending end control Packet.\n");
     return -1;
   }
