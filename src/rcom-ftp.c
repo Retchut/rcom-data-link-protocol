@@ -173,13 +173,14 @@ int readStartPacket(int portfd, struct fileData *fData) {
   return 0;
 }
 
-int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize,
-                   unsigned int expPacketNum) {
+int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize, unsigned int expPacketNum) {
   unsigned char dataPacket[dataSize];
+  printf("readDataPacket 0\n");
   if (llread(portfd, dataPacket) == -1) {
     printf("llread failed at readDataPacket\n");
     return 1;
   }
+  printf("readDataPacket 1\n");
 
   if (dataPacket[0] != PACKET_DATA) {
     printf("Did not receive a data packet.\n");
