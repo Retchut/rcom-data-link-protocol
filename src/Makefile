@@ -19,5 +19,5 @@ read.o: read.c
 state.o: state.c
 	$(CC) $(CFLAGS) state.c -o state.o
 
-clean:
-	-rm -f *.o recv write
+clean: # -rm -f *.o recv write
+	-rm -f *.o recv write main
