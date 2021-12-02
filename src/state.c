@@ -28,7 +28,6 @@ static void handle_start(unsigned char byte) {
 
 static void handle_flag_rcv(unsigned char byte) {
   switch (byte) {
-    // TODO: Add all other address flags
   case A_SEND_CMD:
   case A_RECV_CMD:
     set_state(A_RCV);

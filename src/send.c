@@ -31,10 +31,10 @@ int writeInformationFrame(int fd, unsigned char addr, unsigned char *info_ptr,
   unsigned char original_bcc2 = build_BCC2(info_ptr, info_size);
   unsigned short stuffed_bcc2;
 
-  if (original_bcc2 == 0x7e) {
-    stuffed_bcc2 = 0x7d5e;
-  } else if (original_bcc2 == 0x7d) {
-    stuffed_bcc2 = 0x7d5d;
+  if (original_bcc2 == FLAG) {
+    stuffed_bcc2 = (ESCAPE << 4) | FLAG_ESCAPE;
+  } else if (original_bcc2 == ESCAPE) {
+    stuffed_bcc2 = (ESCAPE << 4) | ESCAPE_ESCAPE;
   } else {
     frame[stuffed_size + 4] = original_bcc2;
     frame[stuffed_size + 5] = FLAG;
@@ -107,7 +107,7 @@ int writeSupervisionAndRetry(int fd, unsigned char msg_addr,
   for (int i = 0; i < NUM_TRIES; i++) {
     ret = writeSupervisionFrame(fd, msg_addr, msg_ctrl);
     if (ret != SU_FRAME_SIZE) {
-      sleep(2);
+      sleep(1);
     } else {
       return 0;
     }
@@ -124,10 +124,10 @@ static int stuff_data(unsigned char *data, size_t data_size,
   for (; data_idx < data_size; data_idx++) {
     if (data[data_idx] == FLAG) {
       stuffed_data[stuffed_idx++] = ESCAPE;
-      stuffed_data[stuffed_idx++] = FLAG ^ 0x20;
+      stuffed_data[stuffed_idx++] = FLAG_ESCAPE;
     } else if (data[data_idx] == ESCAPE) {
       stuffed_data[stuffed_idx++] = ESCAPE;
-      stuffed_data[stuffed_idx++] = ESCAPE ^ 0x20;
+      stuffed_data[stuffed_idx++] = ESCAPE_ESCAPE;
     } else {
       stuffed_data[stuffed_idx++] = data[data_idx];
     }

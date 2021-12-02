@@ -21,9 +21,9 @@ int unstuff_frame(unsigned char *stuffed_msg, size_t size,
       stuffed_idx++;
 
       if (stuffed_msg[stuffed_idx] == 0x5d) {
-        unstuffed_msg[unstuffed_idx++] = 0x7d;
-      } else if (stuffed_msg[stuffed_idx] == 0x5e) {
-        unstuffed_msg[unstuffed_idx++] = 0x7e;
+        unstuffed_msg[unstuffed_idx++] = ESCAPE_ESCAPE;
+      } else if (stuffed_msg[stuffed_idx] == FLAG_ESCAPE) {
+        unstuffed_msg[unstuffed_idx++] = FLAG;
       } else {
         return -1;
       }

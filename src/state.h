@@ -32,14 +32,39 @@ void handleState(unsigned char byte);
  */
 state_t get_state();
 
+/**
+ * @brief Sets the current state of the program
+ *
+ * @param state New state of the program
+ */
 void set_state(state_t state);
 
+/**
+ * @brief Retrieves the address of the last message sent
+ *
+ * @return The address of the last message sent
+ */
 unsigned char get_addr();
 
+/**
+ * @brief Sets the current address of the program
+ *
+ * @param addr New address of the program
+ */
 void set_addr(unsigned char addr);
 
+/**
+ * @brief Retrieves the current state of the program
+ *
+ * @return The current state of the program
+ */
 unsigned char get_ctrl();
 
+/**
+ * @brief Sets the current control message of the program
+ *
+ * @param ctrl New control of the program
+ */
 void set_ctrl(unsigned char ctrl);
 
 #endif // STATE_H_

@@ -40,15 +40,12 @@ int llopen(int port, bool role_p) {
         continue;
       }
 
-      printf("Sent SET frame\n");
-
       ret = readSupervisionFrame(fd);
 
       if (ret != SU_FRAME_SIZE || get_ctrl() != C_UA ||
           get_addr() != A_RECV_RSP) {
         continue;
       } else {
-        printf("Read UA frame\n");
         return fd;
       }
     }
@@ -66,14 +63,11 @@ int llopen(int port, bool role_p) {
         continue;
       }
 
-      printf("Read SET frame\n");
-
       ret = writeSupervisionAndRetry(fd, A_RECV_RSP, C_UA);
 
       if (ret != 0) {
         continue;
       } else {
-        printf("Sent UA frame\n");
         return fd;
       }
     }
@@ -88,8 +82,8 @@ int llread(int fd, unsigned char *buffer) {
   static int packet = 0;
 
   int ret = -1;
-  unsigned char stuffed_msg[512 + 7];
-  unsigned char unstuffed_msg[512 + 7];
+  unsigned char stuffed_msg[MAX_FRAME_SIZE];
+  unsigned char unstuffed_msg[MAX_DATA_CHUNK_SIZE + 2];
   for (int i = 0; i < NUM_TRIES; i++) {
 
     ret = readInformationMessage(fd, stuffed_msg);
@@ -209,7 +203,7 @@ int llclose(int fd) {
     }
 
   } else {
-    return -1;
+    return UNKNOW_ROLE;
   }
 
   return -1;

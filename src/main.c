@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "config.h"
 #include "defines.h"
 #include "ll.h"
 #include "send.h"
@@ -39,7 +40,7 @@ int main(int argc, char *argv[]) {
 
   unsigned char buf[5] = "ABCDE";
 
-  buf[2] = 0x7E;
+  buf[2] = FLAG;
 
   if (role == TRANSMITTER) {
     if (llwrite(fd, buf, 5) == -1) {
