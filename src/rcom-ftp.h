@@ -1,5 +1,5 @@
-#ifndef _RCOM_APPL_H_
-#define _RCOM_APPL_H_
+#ifndef _RCOM_FTP_H_
+#define _RCOM_FTP_H_
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -104,4 +104,4 @@ int readEndPacket(int portfd);
  */
 int receiveFile(int portfd);
 
-#endif /* _RCOM_APPL_H_ */
+#endif /* _RCOM_FTP_H_ */
