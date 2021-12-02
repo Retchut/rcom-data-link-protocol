@@ -138,8 +138,8 @@ int readStartPacket(int portfd, struct fileData *fData){
   return 0;
 }
 
-int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize){
-  unsigned char dataPacket[dataSize];
+int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize, unsigned int expPacketNum){
+  unsigned char dataPacket[dataSize]; 
   if(llread(portfd, dataPacket) != 0){
     return 1;
   }
@@ -149,12 +149,21 @@ int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize){
     return 1;
   }
 
-  //TODO: descobrir porque é que preciso do N (número de sequência (módulo 255))
+  unsigned int n = dataPacket[1];
 
-  unsigned int l1, l2, readSize;
-  memcpy(l1, dataPacket + 3, 1);
-  memcpy(l2, dataPacket + 2, 1);
-  readSize = 256*l2 + l1;
+  //if we receive the previous packet(already read)
+  if(n == ((expPacketNum-1+256)%256)){
+    return 2;
+  }
+  //if we receive a packet ahead
+  else if(n == ((expPacketNum+1)%256)){
+    printf("Received a packet in advance... aborting.\n");
+    return 1;
+  }
+
+  unsigned int l2 = dataPacket[2];
+  unsigned int l1 = dataPacket[3];
+  unsigned int readSize = 256*l2 + l1;
   for(size_t p=0; p < readSize; p++){
     data[p] = dataPacket[4+p];
   }
@@ -195,7 +204,12 @@ int receiveFile(int portfd) {
     unsigned int dataSize = (packetsRecvd < fData.fullPackets) ? MAX_DATA_CHUNK_SIZE : fData.leftover;
     unsigned char data[dataSize];
 
-    if(readDataPacket(portfd, data, dataSize) != 0){
+    unsigned int expPacketNum = (packetsRecvd + 1) % 256;
+    if(readDataPacket(portfd, data, dataSize, expPacketNum) == 2){
+      printf("Received duplicate packet number %u... ignoring.\n", packetsRecvd);
+      continue;
+    }
+    else if(readDataPacket(portfd, data, dataSize, expPacketNum) != 0){
       printf("Error receiving data packet number %u.\n", packetsRecvd);
       return 1;
     }

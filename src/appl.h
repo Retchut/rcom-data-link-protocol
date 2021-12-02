@@ -29,6 +29,9 @@ struct fileData {
 /**
  * @brief Retrieves file data
  *
+ * @param fData         Struct holding the file's data
+ * @param filePTR       Pointer to the file
+ * @param fileName      Name of the file
  * @return 0 on success, -1 otherwise
  */
 int retrieveFileData(struct fileData *fData, FILE *filePtr, char *fileName);
@@ -64,10 +67,34 @@ void generateDataPacket(unsigned char *dataPacket, struct fileData *fData,
  */
 int sendFile(int portfd, char *fileName);
 
+
+/**
+ * @brief Receives the start packet from the transmitter and stores the file information in fileData Struct
+ *
+ * @param portfd    File Descriptor of the serial port
+ * @param fData     Pointer to the struct which will hold the file's data
+ * @return 0 on success, 1 otherwise
+ */
 int readStartPacket(int portfd, struct fileData *fData);
 
-int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize);
 
+/**
+ * @brief Receives packets from the transmitter and decodes them
+ *
+ * @param portfd        File Descriptor of the serial port
+ * @param data          Buffer where we'll store the data to be written to the file
+ * @param dataSize      Size of the data we're reading
+ * @param expPacketNum  Number of the packet we're expecting to receive
+ * @return 0 on success, 1 on error, 2 upon receiving a repeated packet
+ */
+int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize, unsigned int expPacketNum);
+
+
+/**
+ * @brief Receives packets from the transmitter and decodes them
+ *
+ * @param portfd    File Descriptor of the serial port
+ */
 int readEndPacket(int portfd);
 
 /**
