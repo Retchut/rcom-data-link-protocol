@@ -7,8 +7,9 @@
 #define DATA_CHUNK_SIZE 1024
 #define DATA_PACKET_SIZE(dSize) dSize + 4
 #define CTRL_PACKET_SIZE(l1, l2) 5 + l1 + l2
-#define MAX_CTRL_PACKET_SIZE    255
-#define FILE_SIZE_BYTES         4
+#define FILE_SIZE_BYTES         4   // 4 bytes handles file size up to around 4gb
+#define MAX_FILENAME_SIZE       255 // 255 bytes in most popular file systems
+#define MAX_CTRL_PACKET_SIZE    5 + FILE_SIZE_BYTES + MAX_FILENAME_SIZE
 
 #define PACKET_DATA 1
 #define PACKET_CTRL_START 2
@@ -62,6 +63,8 @@ void generateDataPacket(unsigned char *dataPacket, struct fileData *fData,
  * @param fileName  Name of the file to send
  */
 int sendFile(int portfd, char *fileName);
+
+int readStartPacket(int portfd, struct fileData *fData);
 
 /**
  * @brief Receives packets from the transmitter and decodes them

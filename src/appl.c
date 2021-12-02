@@ -32,21 +32,20 @@ int generateControlPacket(unsigned char *ctrlPacket, struct fileData *fData,
   ctrlPacket[0] = start;
   // TLV1
   ctrlPacket[1] = CTRL_FILE_SIZE;
-  ctrlPacket[2] = FILE_SIZE_BYTES; // handles file size up to around 4gb
+  ctrlPacket[2] = FILE_SIZE_BYTES;
   memcpy(ctrlPacket + 3, &(fData->fileSize),
          FILE_SIZE_BYTES); // TODO; check if this is fine
   // TLV2
   ctrlPacket[3 + FILE_SIZE_BYTES] = CTRL_FILE_NAME;
   memcpy(ctrlPacket + 4 + FILE_SIZE_BYTES, &(fData->fileNameSize),
          1); // TODO; check if this is fine
-  ctrlPacket[5 + FILE_SIZE_BYTES] = *fData->fileName;
+  memcpy(ctrlPacket + 5 + FILE_SIZE_BYTES, fData->fileName, fData->fileSize);
 
   return 0;
 }
 
 void generateDataPacket(unsigned char *dataPacket, struct fileData *fData,
                         unsigned char *data, unsigned int dataSize, int seqN) {
-  // TODO; check if these l1 and l2 are correct
   unsigned int l1 = DATA_CHUNK_SIZE % 256;
   unsigned int l2 = DATA_CHUNK_SIZE / 256;
   unsigned int dataPacketHeader[4] = {PACKET_DATA, seqN, l1, l2};
@@ -118,7 +117,35 @@ int sendFile(int portfd, char *fileName) {
   return 0;
 }
 
+int readStartPacket(int portfd, struct fileData *fData){
+  unsigned char startPacket[MAX_CTRL_PACKET_SIZE];
+  if(llread(portfd, startPacket) != 0){
+    return 1;
+  }
+
+  if(startPacket[0] != PACKET_CTRL_START){
+    printf("Did not receive the start packet.\n");
+    return 1;
+  }
+
+  fData->filePtr = NULL;
+  memcpy(&(fData->fileSize), startPacket+3, FILE_SIZE_BYTES);
+  memcpy(&(fData->fileNameSize), startPacket+3+FILE_SIZE_BYTES+2);
+  memcpy(&(fData->fileName), startPacket+3+FILE_SIZE_BYTES+3, fData->fileNameSize);
+  fData->fullPackets = fData->fileSize / DATA_CHUNK_SIZE;
+  fData->leftover = fData->fileSize % DATA_CHUNK_SIZE;
+
+  return 0;
+}
+
 int receiveFile(int portfd) {
+  // read start packet
+  struct fileData fData;
+  if(readStartPacket(portfd, &fData) != 0){
+    printf("Error reading the start packet.\n");
+    return 1;
+  }
+
 
 
   // create file with start packet values
