@@ -1,14 +1,14 @@
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 #include <sys/stat.h>
 
-#include "rcom-ftp.h"
 #include "config.h"
 #include "defines.h"
 #include "ll.h"
+#include "rcom-ftp.h"
 #include "send.h"
 
 int retrieveFileData(struct fileData *fData, FILE *filePtr, char *fileName) {
@@ -44,7 +44,7 @@ int generateControlPacket(unsigned char *ctrlPacket, struct fileData *fData,
   printf("generatectrl 3.\n");
   ctrlPacket[2] = FILE_SIZE_BYTES;
   printf("generatectrl 4.\n");
-  memcpy(ctrlPacket + 3, &(fData->fileSize), FILE_SIZE_BYTES); // TODO; check if this is fine
+  memcpy(ctrlPacket + 3, &(fData->fileSize), FILE_SIZE_BYTES);
   printf("\n%x\n", fData->fileSize);
   printf("%x\n", ctrlPacket[3]);
   printf("%x\n", ctrlPacket[4]);
@@ -54,10 +54,12 @@ int generateControlPacket(unsigned char *ctrlPacket, struct fileData *fData,
   // TLV2
   ctrlPacket[3 + FILE_SIZE_BYTES] = CTRL_FILE_NAME;
   printf("generatectrl 6.\n");
-  memcpy(ctrlPacket + 4 + FILE_SIZE_BYTES, &(fData->fileNameSize),
-         1); // TODO; check if this is fine
+  memcpy(ctrlPacket + 4 + FILE_SIZE_BYTES, &(fData->fileNameSize), 1);
   printf("generatectrl 7.\n");
-  memcpy(ctrlPacket + 5 + FILE_SIZE_BYTES, fData->fileName, fData->fileSize);
+  printf("fdata->fileName %s\n", fData->fileName);
+  printf("fdata->fileSize %d\n", fData->fileSize);
+  memcpy(ctrlPacket + 5 + FILE_SIZE_BYTES, fData->fileName,
+         fData->fileNameSize);
 
   printf("generatectrl end.\n");
   return 0;
@@ -103,7 +105,7 @@ int sendFile(int portfd, char *fileName) {
 
   // Send start Control Packet
   printf("before sending start packet.\n");
-  if(llwrite(portfd, ctrlPacket, ctrlPacketSize) != 0) {
+  if (llwrite(portfd, ctrlPacket, ctrlPacketSize) != ctrlPacketSize) {
     printf("Error sending start control Packet.\n");
     return -1;
   }
@@ -226,7 +228,7 @@ int receiveFile(int portfd) {
   }
   printf("after reading start packet.\n");
 
-  //DEBUG!!!!!
+  // DEBUG!!!!!
   FILE *fp = fopen("Pinguim-received.gif", "w");
 
   // create file with start packet values
@@ -312,11 +314,11 @@ int main(int argc, char *argv[]) {
 
   printf("main before.\n");
   if (role == TRANSMITTER) {
-    if(sendFile(fd, argv[3]) != 0){
+    if (sendFile(fd, argv[3]) != 0) {
       return 1;
     }
   } else if (role == RECEIVER) {
-    if(receiveFile(fd) != 0){
+    if (receiveFile(fd) != 0) {
       return 1;
     }
   }
