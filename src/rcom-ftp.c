@@ -150,7 +150,7 @@ int sendFile(int portfd, char *fileName) {
 
 int readStartPacket(int portfd, struct fileData *fData) {
   unsigned char startPacket[MAX_CTRL_PACKET_SIZE];
-  if (llread(portfd, startPacket) != 0) {
+  if (llread(portfd, startPacket) == -1) {
     return 1;
   }
 
@@ -173,7 +173,8 @@ int readStartPacket(int portfd, struct fileData *fData) {
 int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize,
                    unsigned int expPacketNum) {
   unsigned char dataPacket[dataSize];
-  if (llread(portfd, dataPacket) != 0) {
+  if (llread(portfd, dataPacket) == -1) {
+    printf("llread failed at readDataPacket\n");
     return 1;
   }
 
@@ -206,7 +207,7 @@ int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize,
 
 int readEndPacket(int portfd) {
   unsigned char startPacket[MAX_CTRL_PACKET_SIZE];
-  if (llread(portfd, startPacket) != 0) {
+  if (llread(portfd, startPacket) == -1) {
     return 1;
   }
 

@@ -83,10 +83,12 @@ int llread(int fd, unsigned char *buffer) {
 
   int ret = -1;
   unsigned char stuffed_msg[MAX_FRAME_SIZE];
-  unsigned char unstuffed_msg[MAX_DATA_CHUNK_SIZE + 2];
+  unsigned char unstuffed_msg[MAX_DATA_CHUNK_SIZE + 7];
   for (int i = 0; i < NUM_TRIES; i++) {
 
     ret = readInformationMessage(fd, stuffed_msg);
+
+    printf("Ret is %d\n", ret);
 
     if (ret == -1) {
       continue;
