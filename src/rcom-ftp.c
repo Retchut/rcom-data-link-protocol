@@ -43,7 +43,8 @@ int generateControlPacket(unsigned char *ctrlPacket, struct fileData *fData,
   // TLV2
   ctrlPacket[3 + FILE_SIZE_BYTES] = CTRL_FILE_NAME;
   memcpy(ctrlPacket + 4 + FILE_SIZE_BYTES, &(fData->fileNameSize), 1);
-  memcpy(ctrlPacket + 5 + FILE_SIZE_BYTES, fData->fileName, fData->fileNameSize);
+  memcpy(ctrlPacket + 5 + FILE_SIZE_BYTES, fData->fileName,
+         fData->fileNameSize);
   return 0;
 }
 
@@ -89,7 +90,8 @@ int sendFile(int portfd, char *fileName) {
 
   // Iterate through file, create and send Data Packets
   unsigned int packetsSent = 0;
-  unsigned int allPackets = (fData.leftover == 0) ? fData.fullPackets : fData.fullPackets + 1;
+  unsigned int allPackets =
+      (fData.leftover == 0) ? fData.fullPackets : fData.fullPackets + 1;
   printf("Sending packets...\n");
   while (!feof(filePtr)) {
     // read data
@@ -107,7 +109,7 @@ int sendFile(int portfd, char *fileName) {
     generateDataPacket(dataPacket, &fData, data, dataSize, packetsSent % 1);
 
     // Send Data Packet
-    if (llwrite(portfd, dataPacket, dataPacketSize) != ctrlPacketSize) {
+    if (llwrite(portfd, dataPacket, dataPacketSize) != dataPacketSize) {
       printf("Error sending data packet number %u.\n", packetsSent);
       return -1;
     }
@@ -127,7 +129,7 @@ int sendFile(int portfd, char *fileName) {
   }
   printf("Successfully wrote the End Control Packet.\n");
 
-  if(fclose(filePtr) != 0){
+  if (fclose(filePtr) != 0) {
     perror("fclose");
     return 1;
   }
@@ -147,12 +149,12 @@ int readStartPacket(int portfd, struct fileData *fData) {
     return 1;
   }
 
-  if(startPacket[1] != 0){
+  if (startPacket[1] != 0) {
     printf("Did not receive a correct start packet.\n");
     return 1;
   }
 
-  if(startPacket[2] != FILE_SIZE_BYTES){
+  if (startPacket[2] != FILE_SIZE_BYTES) {
     printf("Did not receive a correct start packet.\n");
     return 1;
   }
@@ -160,29 +162,32 @@ int readStartPacket(int portfd, struct fileData *fData) {
   fData->filePtr = NULL;
   memcpy(&(fData->fileSize), startPacket + 3, FILE_SIZE_BYTES);
 
-  if(startPacket[3+FILE_SIZE_BYTES] != 1){
+  if (startPacket[3 + FILE_SIZE_BYTES] != 1) {
     printf("Did not receive a correct start packet.\n");
     return 1;
   }
 
   memcpy(&(fData->fileNameSize), startPacket + 3 + FILE_SIZE_BYTES + 1, 1);
-  memcpy(&(fData->fileName), startPacket + 3 + FILE_SIZE_BYTES + 3, fData->fileNameSize);
+  memcpy(&(fData->fileName), startPacket + 3 + FILE_SIZE_BYTES + 3,
+         fData->fileNameSize);
   fData->fullPackets = fData->fileSize / MAX_DATA_CHUNK_SIZE;
   fData->leftover = fData->fileSize % MAX_DATA_CHUNK_SIZE;
 
   return 0;
 }
 
-int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize, unsigned int expPacketNum) {
-  unsigned char dataPacket[dataSize];
+int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize,
+                   unsigned int expPacketNum) {
+  unsigned char *dataPacket = (unsigned char *)malloc(dataSize);
   printf("readDataPacket 0\n");
   if (llread(portfd, dataPacket) == -1) {
+    free(dataPacket);
     printf("llread failed at readDataPacket\n");
     return 1;
   }
-  printf("readDataPacket 1\n");
 
   if (dataPacket[0] != PACKET_DATA) {
+    free(dataPacket);
     printf("Did not receive a data packet.\n");
     return 1;
   }
@@ -191,11 +196,13 @@ int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize, unsig
 
   // if we receive the previous packet(already read)
   if (n == ((expPacketNum - 1 + 256) % 256)) {
+    free(dataPacket);
     return 2;
   }
   // if we receive a packet ahead
   else if (n == ((expPacketNum + 1) % 256)) {
     printf("Received a packet in advance... aborting.\n");
+    free(dataPacket);
     return 1;
   }
 
@@ -206,6 +213,7 @@ int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize, unsig
     data[p] = dataPacket[4 + p];
   }
 
+  free(dataPacket);
   return 0;
 }
 
@@ -245,10 +253,12 @@ int receiveFile(int portfd) {
 
   printf("Receiving packets...\n");
   unsigned int packetsRecvd = -1;
-  unsigned int allPackets = (fData.leftover == 0) ? fData.fullPackets : fData.fullPackets + 1;
+  unsigned int allPackets =
+      (fData.leftover == 0) ? fData.fullPackets : fData.fullPackets + 1;
   while (true) {
-    unsigned int dataSize = (packetsRecvd < fData.fullPackets) ? MAX_DATA_CHUNK_SIZE : fData.leftover;
-    printf("Should be 1024: %u\n", dataSize);
+    unsigned int dataSize = (packetsRecvd < fData.fullPackets)
+                                ? MAX_DATA_CHUNK_SIZE
+                                : fData.leftover;
     unsigned char data[dataSize];
 
     unsigned int expPacketNum = (packetsRecvd + 1) % 256;

@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "defines.h"
+#include <stdio.h>
 
 unsigned char build_BCC2(unsigned char *data, size_t size) {
   unsigned char bcc2 = data[0];
@@ -31,5 +32,6 @@ int unstuff_frame(unsigned char *stuffed_msg, size_t size,
       unstuffed_msg[unstuffed_idx++] = stuffed_msg[stuffed_idx];
     }
   }
+
   return unstuffed_idx;
 }

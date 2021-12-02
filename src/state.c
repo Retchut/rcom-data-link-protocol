@@ -2,6 +2,8 @@
 #include "defines.h"
 #include "ll.h"
 
+#include <stdio.h>
+
 static state_machine state;
 
 state_t get_state() { return state.current_st; }
@@ -100,7 +102,6 @@ static void handle_i_msg(unsigned char byte) {
     break;
   default:
     if (byte == (BCC1(get_addr(), get_ctrl()))) {
-      printf("bcc okay\n");
       set_state(DATA_RCV);
     } else {
       set_state(START);
@@ -122,28 +123,28 @@ static void handle_data_rcv(unsigned char byte) {
 void handleState(unsigned char byte) {
 
   switch (get_state()) {
-    case START:
-      handle_start(byte);
-      break;
-    case FLAG_RCV:
-      handle_flag_rcv(byte);
-      break;
-    case A_RCV:
-      handle_a_rcv(byte);
-      break;
-    case C_RCV:
-      handle_c_recv(byte);
-      break;
-    case BCC_OK:
-      handle_bcc_ok(byte);
-      break;
-    case I_MSG:
-      handle_i_msg(byte);
-      break;
-    case DATA_RCV:
-      handle_data_rcv(byte);
-      break;
-    case STOP:
-      break;
+  case START:
+    handle_start(byte);
+    break;
+  case FLAG_RCV:
+    handle_flag_rcv(byte);
+    break;
+  case A_RCV:
+    handle_a_rcv(byte);
+    break;
+  case C_RCV:
+    handle_c_recv(byte);
+    break;
+  case BCC_OK:
+    handle_bcc_ok(byte);
+    break;
+  case I_MSG:
+    handle_i_msg(byte);
+    break;
+  case DATA_RCV:
+    handle_data_rcv(byte);
+    break;
+  case STOP:
+    break;
   }
 }

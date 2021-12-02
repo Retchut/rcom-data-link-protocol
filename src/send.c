@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -24,7 +25,7 @@ int writeInformationFrame(int fd, unsigned char addr, unsigned char *info_ptr,
   frame[0] = FLAG;
   frame[1] = addr;
   frame[2] = C_S(msg_nr);
-  frame[3] = BCC1(addr, msg_nr);
+  frame[3] = BCC1(addr, C_S(msg_nr));
 
   memcpy(frame + 4, stuffed_info, stuffed_size);
 

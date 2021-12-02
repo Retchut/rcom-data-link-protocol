@@ -72,7 +72,7 @@ int readInformationMessage(int fd, unsigned char *stuffed_msg) {
 
     ret = read(fd, &byte, 1);
 
-    if (ret == -1) {\
+    if (ret == -1) {
       perror("read");
       exit(-1);
     }
@@ -82,15 +82,11 @@ int readInformationMessage(int fd, unsigned char *stuffed_msg) {
       end_time = time(&start_time);
     }
 
-    printf("read a %x\n", byte);
-
-    if (get_state() == I_MSG) {
-      printf("The BCC is %x\n", byte);
+    if (get_state() == DATA_RCV) {
+      stuffed_msg[idx++] = byte;
     }
 
     handleState(byte);
-
-
   }
 
   return difftime(end_time, start_time) < 3 ? idx - 1 : -1;
