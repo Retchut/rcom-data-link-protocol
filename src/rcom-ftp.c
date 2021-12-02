@@ -243,15 +243,15 @@ int receiveFile(int portfd) {
   // fseek(fp, 0, SEEK_SET);
 
   printf("Receiving packets...\n");
-  unsigned int packetsRecvd = 0;
+  unsigned int packetsRecvd = -1;
   unsigned int allPackets = (fData.leftover == 0) ? fData.fullPackets : fData.fullPackets + 1;
   while (true) {
-    unsigned int dataSize = (packetsRecvd < fData.fullPackets)
-                                ? MAX_DATA_CHUNK_SIZE
-                                : fData.leftover;
+    unsigned int dataSize = (packetsRecvd < fData.fullPackets) ? MAX_DATA_CHUNK_SIZE : fData.leftover;
+    printf("Should be 1024: %u\n", dataSize);
     unsigned char data[dataSize];
 
     unsigned int expPacketNum = (packetsRecvd + 1) % 256;
+    printf("Should be 0: %u\n", expPacketNum);
     if (readDataPacket(portfd, data, dataSize, expPacketNum) == 2) {
       printf("Received duplicate packet number %u... ignoring.\n",
              packetsRecvd);
@@ -260,6 +260,7 @@ int receiveFile(int portfd) {
       printf("Error receiving data packet number %u.\n", packetsRecvd);
       return 1;
     }
+    printf("Read data Packet,\n");
 
     // write data to file
     if (fwrite(data, 1, dataSize, fp) != dataSize) {
