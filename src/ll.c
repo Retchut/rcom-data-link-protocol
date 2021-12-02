@@ -1,55 +1,19 @@
-#include <fcntl.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
 
+#include "config.h"
 #include "defines.h"
 #include "ll.h"
 #include "read.h"
 #include "send.h"
 #include "state.h"
+#include "utils.h"
 
-static struct termios old_termio;
 static bool role = -1;
-
-int set_config(int port) {
-
-  char serial_port[15];
-  sprintf(serial_port, "/dev/ttyS%d", port);
-
-  int serial_port_fd = open(serial_port, O_RDWR | O_NOCTTY);
-
-  if (serial_port_fd < 0) {
-    perror(serial_port);
-    exit(-1);
-  }
-
-  struct termios new_termio;
-
-  if (tcgetattr(serial_port_fd, &old_termio) == -1) {
-    perror("tcgetattr");
-    exit(-1);
-  }
-
-  bzero(&new_termio, sizeof(new_termio));
-  new_termio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
-  new_termio.c_iflag = IGNPAR;
-  new_termio.c_oflag = 0;
-  new_termio.c_lflag = 0;
-  new_termio.c_cc[VTIME] = 30;
-  new_termio.c_cc[VMIN] = 0;
-
-  tcflush(serial_port_fd, TCIOFLUSH);
-
-  if (tcsetattr(serial_port_fd, TCSANOW, &new_termio) == -1) {
-    perror("tcsetattr");
-    exit(-1);
-  }
-
-  return serial_port_fd;
-}
 
 int llopen(int port, bool role_p) {
 
@@ -118,30 +82,6 @@ int llopen(int port, bool role_p) {
 
     return UNKNOW_ROLE;
   }
-}
-
-// TODO: Move to another file, possibly utils
-int unstuff_frame(unsigned char *stuffed_msg, size_t size,
-                  unsigned char *unstuffed_msg) {
-
-  int stuffed_idx = 0, unstuffed_idx = 0;
-  for (; stuffed_idx < size; stuffed_idx++) {
-
-    if (stuffed_msg[stuffed_idx] == ESCAPE) {
-      stuffed_idx++;
-
-      if (stuffed_msg[stuffed_idx] == 0x5d) {
-        unstuffed_msg[unstuffed_idx++] = 0x7d;
-      } else if (stuffed_msg[stuffed_idx] == 0x5e) {
-        unstuffed_msg[unstuffed_idx++] = 0x7e;
-      } else {
-        return -1;
-      }
-    } else {
-      unstuffed_msg[unstuffed_idx++] = stuffed_msg[stuffed_idx];
-    }
-  }
-  return unstuffed_idx;
 }
 
 int llread(int fd, unsigned char *buffer) {
@@ -213,16 +153,6 @@ int llwrite(int fd, unsigned char *buffer, unsigned int length) {
   return -1;
 }
 
-static int reset_config(int fd) {
-
-  if (tcsetattr(fd, TCSANOW, &old_termio) == -1) {
-    perror("tcsetattr");
-    exit(-1);
-  }
-
-  return close(fd);
-}
-
 int llclose(int fd) {
   int ret;
 
@@ -235,8 +165,6 @@ int llclose(int fd) {
         continue;
       }
 
-      printf("Wrote DISC frame\n");
-
       ret = readSupervisionFrame(fd);
 
       if (ret != SU_FRAME_SIZE || get_ctrl() != C_DISC ||
@@ -244,13 +172,10 @@ int llclose(int fd) {
         continue;
       }
 
-      printf("Read DISC frame\n");
-
       ret = writeSupervisionAndRetry(fd, A_SEND_RSP, C_UA);
       if (ret != 0) {
         continue;
       } else {
-        printf("Wrote UA frame\n");
         sleep(2);
         return reset_config(fd);
       }
@@ -267,15 +192,11 @@ int llclose(int fd) {
         continue;
       }
 
-      printf("Read DISC frame\n");
-
       ret = writeSupervisionAndRetry(fd, A_RECV_CMD, C_DISC);
 
       if (ret != 0) {
         continue;
       }
-
-      printf("Wrote DISC frame\n");
 
       ret = readSupervisionFrame(fd);
 
@@ -283,7 +204,6 @@ int llclose(int fd) {
           get_addr() != A_SEND_RSP) {
         continue;
       } else {
-        printf("Read UA frame\n");
         return reset_config(fd);
       }
     }

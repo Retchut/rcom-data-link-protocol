@@ -41,8 +41,6 @@ int main(int argc, char *argv[]) {
 
   buf[2] = 0x7E;
 
-  buf[4] = 0x7D;
-
   if (role == TRANSMITTER) {
     if (llwrite(fd, buf, 5) == -1) {
       fprintf(stderr, "Error writing to port \n");
