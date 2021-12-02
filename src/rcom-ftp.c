@@ -30,23 +30,36 @@ int retrieveFileData(struct fileData *fData, FILE *filePtr, char *fileName) {
 
 int generateControlPacket(unsigned char *ctrlPacket, struct fileData *fData,
                           int start) {
+  printf("generatectrl 0.\n");
   if (start != PACKET_CTRL_START && start != PACKET_CTRL_END) {
     return -1;
   }
+  printf("generatectrl 1.\n");
 
   // Control field
   ctrlPacket[0] = start;
+  printf("generatectrl 2.\n");
   // TLV1
   ctrlPacket[1] = CTRL_FILE_SIZE;
+  printf("generatectrl 3.\n");
   ctrlPacket[2] = FILE_SIZE_BYTES;
-  memcpy(ctrlPacket + 3, &(fData->fileSize),
-         FILE_SIZE_BYTES); // TODO; check if this is fine
+  printf("generatectrl 4.\n");
+  memcpy(ctrlPacket + 3, &(fData->fileSize), FILE_SIZE_BYTES); // TODO; check if this is fine
+  printf("\n%x\n", fData->fileSize);
+  printf("%x\n", ctrlPacket[3]);
+  printf("%x\n", ctrlPacket[4]);
+  printf("%x\n", ctrlPacket[5]);
+  printf("%x\n\n", ctrlPacket[6]);
+  printf("generatectrl 5.\n");
   // TLV2
   ctrlPacket[3 + FILE_SIZE_BYTES] = CTRL_FILE_NAME;
+  printf("generatectrl 6.\n");
   memcpy(ctrlPacket + 4 + FILE_SIZE_BYTES, &(fData->fileNameSize),
          1); // TODO; check if this is fine
+  printf("generatectrl 7.\n");
   memcpy(ctrlPacket + 5 + FILE_SIZE_BYTES, fData->fileName, fData->fileSize);
 
+  printf("generatectrl end.\n");
   return 0;
 }
 
@@ -60,32 +73,41 @@ void generateDataPacket(unsigned char *dataPacket, struct fileData *fData,
 }
 
 int sendFile(int portfd, char *fileName) {
+  printf("sendFile 0.\n");
   FILE *filePtr = fopen(fileName, "r");
+  printf("sendFile 1.\n");
   if (filePtr == NULL) {
     perror("fopen");
     return 1;
   }
+  printf("sendFile 2.\n");
 
   struct fileData fData;
   if (retrieveFileData(&fData, filePtr, fileName) != 0) {
     printf("Error retrieving the file's data.\n");
     return 1;
   }
+  printf("sendFile 3.\n");
 
   // Set up start Control Packet
   unsigned int ctrlPacketSize =
       CTRL_PACKET_SIZE(FILE_SIZE_BYTES, fData.fileNameSize);
+  printf("sendFile 4.\n");
   unsigned char ctrlPacket[ctrlPacketSize];
+  printf("sendFile 5.\n");
   if (generateControlPacket(ctrlPacket, &fData, PACKET_CTRL_START) != 0) {
     printf("Error creating the start control packet.\n");
     return 1;
   }
+  printf("sendFile 6.\n");
 
   // Send start Control Packet
-  if (llwrite(portfd, ctrlPacket, ctrlPacketSize) != 0) {
+  printf("before sending start packet.\n");
+  if(llwrite(portfd, ctrlPacket, ctrlPacketSize) != 0) {
     printf("Error sending start control Packet.\n");
     return -1;
   }
+  printf("after sending start packet.\n");
 
   // Iterate through file, create and send Data Packets
   unsigned int packetsSent = 0;
@@ -197,10 +219,12 @@ int readEndPacket(int portfd) {
 int receiveFile(int portfd) {
   // read start packet
   struct fileData fData;
+  printf("before reading start packet.\n");
   if (readStartPacket(portfd, &fData) != 0) {
     printf("Error reading the start packet.\n");
     return 1;
   }
+  printf("after reading start packet.\n");
 
   //DEBUG!!!!!
   FILE *fp = fopen("Pinguim-received.gif", "w");
@@ -280,13 +304,13 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Invalid port specified\n");
     exit(-1);
   }
-
   int fd = -1;
   if ((fd = llopen(port, role)) == -1) {
     fprintf(stderr, "Error opening port \n");
     exit(-1);
   }
 
+  printf("main before.\n");
   if (role == TRANSMITTER) {
     if(sendFile(fd, argv[3]) != 0){
       return 1;
@@ -296,6 +320,7 @@ int main(int argc, char *argv[]) {
       return 1;
     }
   }
+  printf("main after.\n");
 
   if (llclose(fd) == -1) {
     fprintf(stderr, "Error closing port \n");
