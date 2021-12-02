@@ -16,8 +16,8 @@ int retrieveFileData(struct fileData *fData, FILE *filePtr, char *fileName) {
   fData->fileName = fileName;
   fData->fileNameSize = (unsigned int)strlen(fileName);
   fData->fileSize = (unsigned int)fileStat.st_size;
-  fData->fullPackets = fData->fileSize / DATA_CHUNK_SIZE;
-  fData->leftover = fData->fileSize % DATA_CHUNK_SIZE;
+  fData->fullPackets = fData->fileSize / MAX_DATA_CHUNK_SIZE;
+  fData->leftover = fData->fileSize % MAX_DATA_CHUNK_SIZE;
 
   return 0;
 }
@@ -46,8 +46,8 @@ int generateControlPacket(unsigned char *ctrlPacket, struct fileData *fData,
 
 void generateDataPacket(unsigned char *dataPacket, struct fileData *fData,
                         unsigned char *data, unsigned int dataSize, int seqN) {
-  unsigned int l1 = DATA_CHUNK_SIZE % 256;
-  unsigned int l2 = DATA_CHUNK_SIZE / 256;
+  unsigned int l1 = MAX_DATA_CHUNK_SIZE % 256;
+  unsigned int l2 = MAX_DATA_CHUNK_SIZE / 256;
   unsigned int dataPacketHeader[4] = {PACKET_DATA, seqN, l1, l2};
   memcpy(dataPacket, dataPacketHeader, 4);
   memcpy(dataPacket + 4, data, dataSize);
@@ -86,7 +86,7 @@ int sendFile(int portfd, char *fileName) {
   while (!feof(filePtr)) {
     // read data
     unsigned int dataSize =
-        (packetsSent < fData.fullPackets) ? DATA_CHUNK_SIZE : fData.leftover;
+        (packetsSent < fData.fullPackets) ? MAX_DATA_CHUNK_SIZE : fData.leftover;
     unsigned char data[dataSize];
     for (size_t i = 0; i < dataSize; i++) {
       data[i] = fgetc(filePtr);
@@ -132,8 +132,32 @@ int readStartPacket(int portfd, struct fileData *fData){
   memcpy(&(fData->fileSize), startPacket+3, FILE_SIZE_BYTES);
   memcpy(&(fData->fileNameSize), startPacket+3+FILE_SIZE_BYTES+2);
   memcpy(&(fData->fileName), startPacket+3+FILE_SIZE_BYTES+3, fData->fileNameSize);
-  fData->fullPackets = fData->fileSize / DATA_CHUNK_SIZE;
-  fData->leftover = fData->fileSize % DATA_CHUNK_SIZE;
+  fData->fullPackets = fData->fileSize / MAX_DATA_CHUNK_SIZE;
+  fData->leftover = fData->fileSize % MAX_DATA_CHUNK_SIZE;
+
+  return 0;
+}
+
+int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize){
+  unsigned char dataPacket[dataSize];
+  if(llread(portfd, dataPacket) != 0){
+    return 1;
+  }
+
+  if(dataPacket[0] != PACKET_DATA){
+    printf("Did not receive a data packet.\n");
+    return 1;
+  }
+
+  //TODO: descobrir porque é que preciso do N (número de sequência (módulo 255))
+
+  unsigned int l1, l2, readSize;
+  memcpy(l1, dataPacket + 3, 1);
+  memcpy(l2, dataPacket + 2, 1);
+  readSize = 256*l2 + l1;
+  for(size_t p=0; p < readSize; p++){
+    data[p] = dataPacket[4+p];
+  }
 
   return 0;
 }
@@ -146,9 +170,29 @@ int receiveFile(int portfd) {
     return 1;
   }
 
-
-
   // create file with start packet values
+  FILE *fp = fopen(fData.fileName, "w");
+  // fseek(fp, fData.fileSize-1, SEEK_SET);
+  // fputc('\0', fp);
+  // fseek(fp, 0, SEEK_SET);
+
+  unsigned int packetsRecvd = 0;
+  while(true){
+    unsigned int dataSize = (packetsRecvd < fData.fullPackets) ? MAX_DATA_CHUNK_SIZE : fData.leftover;
+    unsigned char data[dataSize];
+
+    if(readDataPacket(portfd, data) != 0){
+      printf("Error receiving data packet number %u.\n", packetsRecvd);
+      return 1;
+    }
+
+    //write data
+
+
+    //break if we have read all packets
+    unsigned int allPackets = (fData.leftover == 0) ? fData.fullPackets : fData.fullPackets + 1;
+    if(packetsRecvd == allPackets) break;
+  }
 
   // while loop to read and store file until we find the end packet
 

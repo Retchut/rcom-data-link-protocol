@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#define DATA_CHUNK_SIZE 1024
+#define MAX_DATA_CHUNK_SIZE 1024
 #define DATA_PACKET_SIZE(dSize) dSize + 4
 #define CTRL_PACKET_SIZE(l1, l2) 5 + l1 + l2
 #define FILE_SIZE_BYTES         4   // 4 bytes handles file size up to around 4gb
@@ -65,6 +65,8 @@ void generateDataPacket(unsigned char *dataPacket, struct fileData *fData,
 int sendFile(int portfd, char *fileName);
 
 int readStartPacket(int portfd, struct fileData *fData);
+
+int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize);
 
 /**
  * @brief Receives packets from the transmitter and decodes them
