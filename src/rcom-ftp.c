@@ -147,11 +147,26 @@ int readStartPacket(int portfd, struct fileData *fData) {
     return 1;
   }
 
+  if(startPacket[1] != 0){
+    printf("Did not receive a correct start packet.\n");
+    return 1;
+  }
+
+  if(startPacket[2] != FILE_SIZE_BYTES){
+    printf("Did not receive a correct start packet.\n");
+    return 1;
+  }
+
   fData->filePtr = NULL;
   memcpy(&(fData->fileSize), startPacket + 3, FILE_SIZE_BYTES);
-  memcpy(&(fData->fileNameSize), startPacket + 3 + FILE_SIZE_BYTES + 2, 1);
-  memcpy(&(fData->fileName), startPacket + 3 + FILE_SIZE_BYTES + 3,
-         fData->fileNameSize);
+
+  if(startPacket[3+FILE_SIZE_BYTES] != 1){
+    printf("Did not receive a correct start packet.\n");
+    return 1;
+  }
+
+  memcpy(&(fData->fileNameSize), startPacket + 3 + FILE_SIZE_BYTES + 1, 1);
+  memcpy(&(fData->fileName), startPacket + 3 + FILE_SIZE_BYTES + 3, fData->fileNameSize);
   fData->fullPackets = fData->fileSize / MAX_DATA_CHUNK_SIZE;
   fData->leftover = fData->fileSize % MAX_DATA_CHUNK_SIZE;
 
