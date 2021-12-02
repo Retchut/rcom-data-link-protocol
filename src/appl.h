@@ -68,6 +68,8 @@ int readStartPacket(int portfd, struct fileData *fData);
 
 int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize);
 
+int readEndPacket(int portfd);
+
 /**
  * @brief Receives packets from the transmitter and decodes them
  *

@@ -162,6 +162,20 @@ int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize){
   return 0;
 }
 
+int readEndPacket(int portfd){
+  unsigned char startPacket[MAX_CTRL_PACKET_SIZE];
+  if(llread(portfd, startPacket) != 0){
+    return 1;
+  }
+
+  if(startPacket[0] != PACKET_CTRL_END){
+    printf("Did not receive the end packet.\n");
+    return 1;
+  }
+
+  return 0;
+}
+
 int receiveFile(int portfd) {
   // read start packet
   struct fileData fData;
@@ -181,22 +195,33 @@ int receiveFile(int portfd) {
     unsigned int dataSize = (packetsRecvd < fData.fullPackets) ? MAX_DATA_CHUNK_SIZE : fData.leftover;
     unsigned char data[dataSize];
 
-    if(readDataPacket(portfd, data) != 0){
+    if(readDataPacket(portfd, data, dataSize) != 0){
       printf("Error receiving data packet number %u.\n", packetsRecvd);
       return 1;
     }
 
-    //write data
-
+    //write data to file
+    if(fwrite(data, 1, dataSize, fp) != dataSize){
+      printf("Error writing data packet number %u.\n", packetsRecvd);
+      return 1;
+    }
+    packetsRecvd++;
 
     //break if we have read all packets
     unsigned int allPackets = (fData.leftover == 0) ? fData.fullPackets : fData.fullPackets + 1;
     if(packetsRecvd == allPackets) break;
   }
 
-  // while loop to read and store file until we find the end packet
+  if(readEndPacket(portfd) != 0){
+    printf("Error reading the end packet.\n");
+    return 1;
+  }
 
   // close
+  if(fclose(fp) != 0){
+    printf("Error closing the file.\n");
+    return 1;
+  }
 
   return 0;
 }
