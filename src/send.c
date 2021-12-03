@@ -18,6 +18,8 @@ int writeInformationFrame(int fd, unsigned char addr, unsigned char *info_ptr,
 
   unsigned char stuffed_info[info_size * 2];
   int stuffed_size = stuff_data(info_ptr, info_size, stuffed_info);
+  printf("after stuffing:\n");
+  printf("1018: %X\t1019: %X\t1020: %X\t 1021: %X\t1022: %X\t1023: %X\n", stuffed_info[stuffed_size-6], stuffed_info[stuffed_size-5], stuffed_info[stuffed_size-4], stuffed_info[stuffed_size-3], stuffed_info[stuffed_size-2], stuffed_info[stuffed_size-1]);
 
   int ret = -1;
   unsigned char frame[I_FRAME_SIZE(stuffed_size)];

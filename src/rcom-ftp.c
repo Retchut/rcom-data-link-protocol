@@ -83,7 +83,7 @@ int sendFile(int portfd, char *fileName) {
     return 1;
   }
   printf("\nSuccessfully generated the Start Control Packet.\n");
-
+  
   // Send start Control Packet
   if (llwrite(portfd, ctrlPacket, ctrlPacketSize) != ctrlPacketSize) {
     printf("Error sending start control Packet.\n");
@@ -105,11 +105,15 @@ int sendFile(int portfd, char *fileName) {
     for (size_t i = 0; i < dataSize; i++) {
       data[i] = fgetc(filePtr);
     }
+    printf("\n");
 
     // Create Data Packet
     unsigned int dataPacketSize = DATA_PACKET_SIZE(dataSize);
     unsigned char dataPacket[dataPacketSize];
     generateDataPacket(dataPacket, &fData, data, dataSize, packetsSent % 2);
+
+    printf("dataPacket:\n");
+    printf("1018: %X\t1019: %X\t1020: %X\t 1021: %X\t1022: %X\t1023: %X\n", dataPacket[1018+4],dataPacket[1019+4], dataPacket[1020+4], dataPacket[1021+4], dataPacket[1022+4], dataPacket[1023+4]);
 
     if (llwrite(portfd, dataPacket, dataSize) == -1) {
       fprintf(stderr, "Error writing packet %d\n", packetsSent);
@@ -186,52 +190,40 @@ int readStartPacket(int portfd, struct fileData *fData) {
 
 int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize,
                    unsigned int expPacketNum) {
-  printf("readDataPacket 0\n");
   unsigned char *dataPacket = (unsigned char *)malloc(dataSize);
-  printf("readDataPacket 1\n");
   if (llread(portfd, dataPacket) == -1) {
     free(dataPacket);
     printf("llread failed at readDataPacket\n");
     return 1;
   }
-  printf("readDataPacket 2\n");
 
   if (dataPacket[0] != PACKET_DATA) {
     free(dataPacket);
     printf("Did not receive a data packet.\n");
     return 1;
   }
-  printf("readDataPacket 3\n");
 
   unsigned int n = dataPacket[1];
   printf("We are expecting packet %d and we got %d\n", expPacketNum, n);
-  printf("readDataPacket 4\n");
 
   // if we receive the previous packet(already read)
   if (n == ((expPacketNum - 1 + 256) % 256)) {
-    printf("readDataPacket 5-1\n");
     free(dataPacket);
     return 2;
   }
   // if we receive a packet ahead
   else if (n == ((expPacketNum + 1) % 256)) {
-    printf("readDataPacket 5-2\n");
     printf("Received a packet in advance... aborting.\n");
     free(dataPacket);
     return 1;
   }
-  printf("readDataPacket 5\n");
 
   unsigned int l2 = dataPacket[2];
-  printf("readDataPacket 6\n");
   unsigned int l1 = dataPacket[3];
-  printf("readDataPacket 7\n");
   unsigned int readSize = 256 * l2 + l1;
-  printf("readDataPacket 8\n");
   for (size_t p = 0; p < readSize; p++) {
     data[p] = dataPacket[4 + p];
   }
-  printf("readDataPacket 9\n");
 
   free(dataPacket);
   return 0;
@@ -265,7 +257,7 @@ int receiveFile(int portfd) {
   printf("Successfully read the start packet and retrieved the file's data.\n");
 
   // prepare modified fileName
-  // TODO: Breaks here because of incorret memory writing leading to segfault
+  // TODO: Breaks here because of incorrect memory writing leading to segfault
   char newName[9 + fData.fileNameSize];
   sprintf(newName, "%s%s", "received-", fData.fileName);
 
@@ -311,6 +303,8 @@ int receiveFile(int portfd) {
 
     // UNCOMMENT BELOW!
     // write data to file
+    printf("before writing to file application\n");
+    printf("1019: %X\t1020: %X\t 1021: %X\t1022: %X\t1023: %X\n", data[1019], data[1020], data[1021], data[1022], data[1023]);
     if (fwrite(data, 1, dataSize, fp) != dataSize) {
       printf("Error writing data packet number %u.\n", packetsRecvd);
       return 1;
