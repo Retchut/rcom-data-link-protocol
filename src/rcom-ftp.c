@@ -48,11 +48,10 @@ int generateControlPacket(unsigned char *ctrlPacket, struct fileData *fData,
   return 0;
 }
 
-void generateDataPacket(unsigned char *dataPacket, struct fileData *fData,
-                        unsigned char *data, unsigned int dataSize, int seqN) {
+void generateDataPacket(unsigned char *dataPacket, struct fileData *fData, unsigned char *data, unsigned int dataSize, int seqN) {
   unsigned int l1 = MAX_DATA_CHUNK_SIZE % 256;
   unsigned int l2 = MAX_DATA_CHUNK_SIZE / 256;
-  unsigned int dataPacketHeader[4] = {PACKET_DATA, seqN, l1, l2};
+  unsigned char dataPacketHeader[4] = {PACKET_DATA, seqN, l2, l1};
   memcpy(dataPacket, dataPacketHeader, 4);
   memcpy(dataPacket + 4, data, dataSize);
 }
@@ -106,7 +105,7 @@ int sendFile(int portfd, char *fileName) {
     // Create Data Packet
     unsigned int dataPacketSize = DATA_PACKET_SIZE(dataSize);
     unsigned char dataPacket[dataPacketSize];
-    generateDataPacket(dataPacket, &fData, data, dataSize, packetsSent % 1);
+    generateDataPacket(dataPacket, &fData, data, dataSize, packetsSent % 2);
 
     // Send Data Packet
     if (llwrite(portfd, dataPacket, dataPacketSize) != dataPacketSize) {
