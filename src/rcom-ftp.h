@@ -104,4 +104,8 @@ int readEndPacket(int portfd);
  */
 int receiveFile(int portfd);
 
+// REMOVE LATER!!! 
+int gimmeStartPacket(struct fileData *fData);
+int gimmeDataPacket(unsigned char *data, unsigned int dataSize, unsigned int expPacketNum);
+
 #endif /* _RCOM_FTP_H_ */

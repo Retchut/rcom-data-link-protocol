@@ -3,6 +3,10 @@
         "ll.h": "c",
         "*.tcc": "c",
         "stdio.h": "c",
-        "config.h": "c"
+        "config.h": "c",
+        "array": "c",
+        "string": "c",
+        "string_view": "c",
+        "cmath": "c"
     }
 }

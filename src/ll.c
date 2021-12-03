@@ -84,7 +84,6 @@ int llread(int fd, unsigned char *buffer) {
   int ret = -1;
   unsigned char stuffed_msg[MAX_FRAME_SIZE];
   unsigned char unstuffed_msg[MAX_DATA_CHUNK_SIZE + 7];
-  printf("llread 0\n");
   for (int i = 0; i < NUM_TRIES; i++) {
 
     ret = readInformationMessage(fd, stuffed_msg);
@@ -94,12 +93,6 @@ int llread(int fd, unsigned char *buffer) {
     }
 
     ret = unstuff_frame(stuffed_msg, ret, unstuffed_msg);
-
-    //TODO:DEBUG
-    //print received unstuffed frame with trama
-    // printf("unstuffedata: %X%X%X%X%X%X%X%X%X%X\n", unstuffed_msg[0], unstuffed_msg[1], unstuffed_msg[2], unstuffed_msg[3], unstuffed_msg[4], unstuffed_msg[5], unstuffed_msg[6], unstuffed_msg[7], unstuffed_msg[8], unstuffed_msg[9]);
-    //print received unstuffed frame without trama
-    // printf("unstuffedata: %X%X%X%X%X%X%X%X%X%X\n", unstuffed_msg[4+4], unstuffed_msg[5+4], unstuffed_msg[6+4], unstuffed_msg[7+4], unstuffed_msg[8+4], unstuffed_msg[9+4], unstuffed_msg[10+4], unstuffed_msg[11+4], unstuffed_msg[12+4], unstuffed_msg[13+4]);
 
     size_t size = ret - 1;
 
@@ -142,7 +135,6 @@ int llwrite(int fd, unsigned char *buffer, unsigned int length) {
   int ret = -1;
 
   for (int i = 0; i < NUM_TRIES; i++) {
-    printf("Sending packet %d\n", frame_nr);
     ret = writeInformationAndRetry(fd, A_SEND_CMD, buffer, length, frame_nr);
 
     if (ret != -1) {

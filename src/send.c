@@ -12,7 +12,6 @@ static int stuff_data(unsigned char *data, size_t data_size,
 
 int writeInformationFrame(int fd, unsigned char addr, unsigned char *info_ptr,
                           size_t info_size, int msg_nr) {
-  printf("inside2 data: %X%X%X%X%X%X%X%X%X%X\n", info_ptr[4], info_ptr[5], info_ptr[6], info_ptr[7], info_ptr[8], info_ptr[9], info_ptr[10], info_ptr[11], info_ptr[12], info_ptr[13]);
 
   if (info_size <= 0)
     return -1;
@@ -29,13 +28,6 @@ int writeInformationFrame(int fd, unsigned char addr, unsigned char *info_ptr,
   frame[3] = BCC1(addr, C_S(msg_nr));
 
   memcpy(frame + 4, stuffed_info, stuffed_size);
-  //TODO:DEBUG
-  //print 
-  //print unstuffed frame to be sent with trama 
-  // printf("frame   data: %X%X%X%X%X%X%X%X%X%X\n", frame[0], frame[1], frame[2], frame[3], frame[4], frame[5], frame[6], frame[7], frame[8], frame[9]);
-  //print unstuffed frame to be sent without trama 
-  // printf("frame   data: %X%X%X%X%X%X%X%X%X%X\n", frame[4+4], frame[5+4], frame[6+4], frame[7+4], frame[8+4], frame[9+4], frame[10+4], frame[11+4], frame[12+4], frame[13+4]);
-  // printf("insd lp data: ");
 
   unsigned char original_bcc2 = build_BCC2(info_ptr, info_size);
   unsigned short stuffed_bcc2;
@@ -49,9 +41,6 @@ int writeInformationFrame(int fd, unsigned char addr, unsigned char *info_ptr,
     frame[stuffed_size + 5] = FLAG;
 
     ret = write(fd, frame, I_FRAME_SIZE(stuffed_size) - 1);
-    // for(int i=0; i<200; i++){
-    //   printf("%X", frame[i]);
-    // }
 
     return ret == (I_FRAME_SIZE(stuffed_size) - 1) ? 0 : -1;
   }
@@ -65,9 +54,7 @@ int writeInformationFrame(int fd, unsigned char addr, unsigned char *info_ptr,
   return ret == I_FRAME_SIZE(stuffed_size) ? 0 : -1;
 }
 
-int writeInformationAndRetry(int fd, unsigned char addr,
-                             unsigned char *info_ptr, size_t info_size,
-                             int msg_nr) {
+int writeInformationAndRetry(int fd, unsigned char addr, unsigned char *info_ptr, size_t info_size, int msg_nr) {
   int current_attempt = 0;
   int ret = -1;
   do {
