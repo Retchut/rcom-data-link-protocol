@@ -323,7 +323,7 @@ int main(int argc, char *argv[]) {
 
   if (!(argc == 3 && strcmp(argv[1], "receiver") == 0) &&
       !(argc == 4 && strcmp(argv[1], "emitter") == 0)) {
-    fprintf(stderr, "Usage:\t./rcom-ftp Role SerialPortNum [File]\n\tex: \t./rcom-ftp emitter 11 pinguim.jpg\n\t\t./rcom-ftp receiver 10\n");
+    fprintf(stderr, "Usage:\t./rcom-ftp Role SerialPortNum [File]\n\tex: \t./rcom-ftp emitter 11 pinguim.gif\n\t\t./rcom-ftp receiver 10\n");
     exit(-1);
   }
 
