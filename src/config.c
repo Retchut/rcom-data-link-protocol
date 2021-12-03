@@ -50,8 +50,6 @@ int set_config(int port) {
 
 int reset_config(int fd) {
 
-  struct termios old_termio;
-
   if (tcsetattr(fd, TCSANOW, &old_termio) == -1) {
     perror("tcsetattr");
     exit(-1);
