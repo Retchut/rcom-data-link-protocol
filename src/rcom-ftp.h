@@ -5,7 +5,8 @@
 #include <stdio.h>
 
 #define MAX_DATA_CHUNK_SIZE 1024
-#define DATA_PACKET_SIZE(dSize) dSize + 4
+#define DATA_PACKET_HEADER_SIZE 4
+#define DATA_PACKET_SIZE(dSize) dSize + DATA_PACKET_HEADER_SIZE
 #define CTRL_PACKET_SIZE(l1, l2) 5 + l1 + l2
 #define FILE_SIZE_BYTES 4     // 4 bytes handles file size up to around 4gb
 #define MAX_FILENAME_SIZE 255 // 255 bytes in most popular file systems
@@ -87,7 +88,7 @@ int readStartPacket(int portfd, struct fileData *fData);
  * @param expPacketNum  Number of the packet we're expecting to receive
  * @return 0 on success, 1 on error, 2 upon receiving a repeated packet
  */
-int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize,
+int readDataPacket(int portfd, unsigned char *data, unsigned int dataPacketSize, unsigned int dataSize,
                    unsigned int expPacketNum);
 
 /**

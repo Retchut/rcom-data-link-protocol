@@ -88,9 +88,6 @@ int readInformationMessage(int fd, unsigned char *stuffed_msg) {
 
     handleState(byte);
   }
-  int stuffed_size=idx-1;
-  printf("read stuffed:\n");
-  printf("1018: %X\t1019: %X\t1020: %X\t 1021: %X\t1022: %X\t1023: %X\n", stuffed_msg[stuffed_size-6], stuffed_msg[stuffed_size-5], stuffed_msg[stuffed_size-4], stuffed_msg[stuffed_size-3], stuffed_msg[stuffed_size-2], stuffed_msg[stuffed_size-1]);
 
   return difftime(end_time, start_time) < 3 ? idx - 1 : -1;
 }

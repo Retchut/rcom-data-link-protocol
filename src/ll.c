@@ -88,15 +88,11 @@ int llread(int fd, unsigned char *buffer) {
 
     ret = readInformationMessage(fd, stuffed_msg);
 
-    printf("Ret is %d\n", ret);
-
     if (ret == -1) {
       continue;
     }
 
     ret = unstuff_frame(stuffed_msg, ret, unstuffed_msg);
-    printf("unstuffed:\n");
-    printf("1018: %X\t1019: %X\t1020: %X\t 1021: %X\t1022: %X\t1023: %X\n", unstuffed_msg[1018+4], unstuffed_msg[1019+4], unstuffed_msg[1020+4], unstuffed_msg[1021+4], unstuffed_msg[1022+4], unstuffed_msg[1023+4]);
 
     size_t size = ret - 1;
 
@@ -116,8 +112,6 @@ int llread(int fd, unsigned char *buffer) {
         continue;
       } else {
         memcpy(buffer, unstuffed_msg, size);
-        for (int i = 0; i < size; i++) {
-        }
         return size;
       }
     } else if (unstuffed_bcc2 == recv_data_bcc2) {
@@ -130,8 +124,6 @@ int llread(int fd, unsigned char *buffer) {
       return -1;
     }
   }
-  printf("inside llread:\n");
-  printf("1018: %X\t1019: %X\t1020: %X\t 1021: %X\t1022: %X\t1023: %X\n", buffer[1018+4], buffer[1019+4], buffer[1020+4], buffer[1021+4], buffer[1022+4], buffer[1023+4]);
 
   return -1;
 }
