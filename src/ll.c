@@ -95,6 +95,8 @@ int llread(int fd, unsigned char *buffer) {
     }
 
     ret = unstuff_frame(stuffed_msg, ret, unstuffed_msg);
+    printf("unstuffed:\n");
+    printf("1018: %X\t1019: %X\t1020: %X\t 1021: %X\t1022: %X\t1023: %X\n", unstuffed_msg[1018+4], unstuffed_msg[1019+4], unstuffed_msg[1020+4], unstuffed_msg[1021+4], unstuffed_msg[1022+4], unstuffed_msg[1023+4]);
 
     size_t size = ret - 1;
 
@@ -128,7 +130,7 @@ int llread(int fd, unsigned char *buffer) {
       return -1;
     }
   }
-  printf("inside llwrite:\n");
+  printf("inside llread:\n");
   printf("1018: %X\t1019: %X\t1020: %X\t 1021: %X\t1022: %X\t1023: %X\n", buffer[1018+4], buffer[1019+4], buffer[1020+4], buffer[1021+4], buffer[1022+4], buffer[1023+4]);
 
   return -1;
