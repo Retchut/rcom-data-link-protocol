@@ -7,9 +7,9 @@
 #define MAX_DATA_CHUNK_SIZE 1024
 #define DATA_PACKET_SIZE(dSize) dSize + 4
 #define CTRL_PACKET_SIZE(l1, l2) 5 + l1 + l2
-#define FILE_SIZE_BYTES         4   // 4 bytes handles file size up to around 4gb
-#define MAX_FILENAME_SIZE       255 // 255 bytes in most popular file systems
-#define MAX_CTRL_PACKET_SIZE    5 + FILE_SIZE_BYTES + MAX_FILENAME_SIZE
+#define FILE_SIZE_BYTES 4     // 4 bytes handles file size up to around 4gb
+#define MAX_FILENAME_SIZE 255 // 255 bytes in most popular file systems
+#define MAX_CTRL_PACKET_SIZE 5 + FILE_SIZE_BYTES + MAX_FILENAME_SIZE
 
 #define PACKET_DATA 1
 #define PACKET_CTRL_START 2
@@ -67,9 +67,9 @@ void generateDataPacket(unsigned char *dataPacket, struct fileData *fData,
  */
 int sendFile(int portfd, char *fileName);
 
-
 /**
- * @brief Receives the start packet from the transmitter and stores the file information in fileData Struct
+ * @brief Receives the start packet from the transmitter and stores the file
+ * information in fileData Struct
  *
  * @param portfd    File Descriptor of the serial port
  * @param fData     Pointer to the struct which will hold the file's data
@@ -77,18 +77,18 @@ int sendFile(int portfd, char *fileName);
  */
 int readStartPacket(int portfd, struct fileData *fData);
 
-
 /**
  * @brief Receives packets from the transmitter and decodes them
  *
  * @param portfd        File Descriptor of the serial port
- * @param data          Buffer where we'll store the data to be written to the file
+ * @param data          Buffer where we'll store the data to be written to the
+ * file
  * @param dataSize      Size of the data we're reading
  * @param expPacketNum  Number of the packet we're expecting to receive
  * @return 0 on success, 1 on error, 2 upon receiving a repeated packet
  */
-int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize, unsigned int expPacketNum);
-
+int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize,
+                   unsigned int expPacketNum);
 
 /**
  * @brief Receives packets from the transmitter and decodes them
@@ -104,8 +104,9 @@ int readEndPacket(int portfd);
  */
 int receiveFile(int portfd);
 
-// REMOVE LATER!!! 
+// REMOVE LATER!!!
 int gimmeStartPacket(struct fileData *fData);
-int gimmeDataPacket(unsigned char *data, unsigned int dataSize, unsigned int expPacketNum);
+int gimmeDataPacket(unsigned char *data, unsigned int dataSize,
+                    unsigned int expPacketNum);
 
 #endif /* _RCOM_FTP_H_ */

@@ -54,7 +54,9 @@ int writeInformationFrame(int fd, unsigned char addr, unsigned char *info_ptr,
   return ret == I_FRAME_SIZE(stuffed_size) ? 0 : -1;
 }
 
-int writeInformationAndRetry(int fd, unsigned char addr, unsigned char *info_ptr, size_t info_size, int msg_nr) {
+int writeInformationAndRetry(int fd, unsigned char addr,
+                             unsigned char *info_ptr, size_t info_size,
+                             int msg_nr) {
   int current_attempt = 0;
   int ret = -1;
   do {
@@ -120,6 +122,12 @@ static int stuff_data(unsigned char *data, size_t data_size,
 
   int data_idx = 0, stuffed_idx = 0;
 
+  for (int i = 0; i < data_size; i++) {
+    printf("Original data[%d] is %x\n", i, data[i]);
+  }
+
+  printf("\n\n");
+
   for (; data_idx < data_size; data_idx++) {
     if (data[data_idx] == FLAG) {
       stuffed_data[stuffed_idx++] = ESCAPE;
@@ -130,6 +138,10 @@ static int stuff_data(unsigned char *data, size_t data_size,
     } else {
       stuffed_data[stuffed_idx++] = data[data_idx];
     }
+  }
+
+  for (int i = 0; i < stuffed_idx; i++) {
+    printf("Stuffed data[%d] is %x\n", i, stuffed_data[i]);
   }
 
   return stuffed_idx;
