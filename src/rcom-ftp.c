@@ -107,6 +107,7 @@ int sendFile(int portfd, char *fileName) {
     unsigned char dataPacket[dataPacketSize];
     generateDataPacket(dataPacket, &fData, data, dataSize, packetsSent % 2);
 
+    printf("outside data: %X%X%X%X%X%X%X%X%X%X\n", dataPacket[4], dataPacket[5], dataPacket[6], dataPacket[7], dataPacket[8], dataPacket[9], dataPacket[10], dataPacket[11], dataPacket[12], dataPacket[13]);
     // Send Data Packet
     if (llwrite(portfd, dataPacket, dataPacketSize) != dataPacketSize) {
       printf("Error sending data packet number %u.\n", packetsSent);
@@ -178,7 +179,6 @@ int readStartPacket(int portfd, struct fileData *fData) {
 int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize,
                    unsigned int expPacketNum) {
   unsigned char *dataPacket = (unsigned char *)malloc(dataSize);
-  printf("readDataPacket 0\n");
   if (llread(portfd, dataPacket) == -1) {
     free(dataPacket);
     printf("llread failed at readDataPacket\n");
@@ -261,7 +261,6 @@ int receiveFile(int portfd) {
     unsigned char data[dataSize];
 
     unsigned int expPacketNum = (packetsRecvd + 1) % 256;
-    printf("Should be 0: %u\n", expPacketNum);
     if (readDataPacket(portfd, data, dataSize, expPacketNum) == 2) {
       printf("Received duplicate packet number %u... ignoring.\n",
              packetsRecvd);

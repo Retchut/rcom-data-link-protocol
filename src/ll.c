@@ -95,6 +95,12 @@ int llread(int fd, unsigned char *buffer) {
 
     ret = unstuff_frame(stuffed_msg, ret, unstuffed_msg);
 
+    //TODO:DEBUG
+    //print received unstuffed frame with trama
+    // printf("unstuffedata: %X%X%X%X%X%X%X%X%X%X\n", unstuffed_msg[0], unstuffed_msg[1], unstuffed_msg[2], unstuffed_msg[3], unstuffed_msg[4], unstuffed_msg[5], unstuffed_msg[6], unstuffed_msg[7], unstuffed_msg[8], unstuffed_msg[9]);
+    //print received unstuffed frame without trama
+    // printf("unstuffedata: %X%X%X%X%X%X%X%X%X%X\n", unstuffed_msg[4+4], unstuffed_msg[5+4], unstuffed_msg[6+4], unstuffed_msg[7+4], unstuffed_msg[8+4], unstuffed_msg[9+4], unstuffed_msg[10+4], unstuffed_msg[11+4], unstuffed_msg[12+4], unstuffed_msg[13+4]);
+
     size_t size = ret - 1;
 
     if (ret == -1) {
