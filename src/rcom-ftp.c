@@ -111,6 +111,11 @@ int sendFile(int portfd, char *fileName) {
     unsigned char dataPacket[dataPacketSize];
     generateDataPacket(dataPacket, &fData, data, dataSize, packetsSent % 2);
 
+    if (llwrite(portfd, dataPacket, dataSize) == -1) {
+      fprintf(stderr, "Error writing packet %d\n", packetsSent);
+      exit(-1);
+    }
+
     packetsSent++;
     printf("Sent %u out of %u packets.\n", packetsSent, allPackets);
   }
@@ -122,10 +127,10 @@ int sendFile(int portfd, char *fileName) {
 
   // Send End Control Packet
   // UNCOMMENT BELOW!
-  // if (llwrite(portfd, ctrlPacket, ctrlPacketSize) != ctrlPacketSize) {
-  //   printf("Error sending end control Packet.\n");
-  //   return -1;
-  // }
+  if (llwrite(portfd, ctrlPacket, ctrlPacketSize) != ctrlPacketSize) {
+    printf("Error sending end control Packet.\n");
+    return -1;
+  }
   printf("\nSuccessfully wrote the End Control Packet.\n");
 
   if (fclose(filePtr) != 0) {
@@ -150,19 +155,16 @@ int readStartPacket(int portfd, struct fileData *fData) {
     return 1;
   }
 
-  printf("llread was good\n");
   if (startPacket[1] != 0) {
     printf("Did not receive a correct start packet.\n");
     return 1;
   }
-  printf("llread was good\n");
 
   if (startPacket[2] != FILE_SIZE_BYTES) {
     printf("Did not receive a correct start packet.\n");
     return 1;
   }
 
-  printf("llread was good\n");
   fData->filePtr = NULL;
   memcpy(&(fData->fileSize), startPacket + 3, FILE_SIZE_BYTES);
 
@@ -170,18 +172,11 @@ int readStartPacket(int portfd, struct fileData *fData) {
     printf("Did not receive a correct start packet.\n");
     return 1;
   }
-  printf("llread was good\n");
 
-  for (int i = 0; i < 20; i++) {
-    printf("startpacket[%d] is %x\n", i, startPacket[i]);
-  }
-
-  memcpy(&(fData->fileNameSize), startPacket + 3 + FILE_SIZE_BYTES + 1, 1);
-  printf("file name size is %d\n", fData->fileNameSize);
+  fData->fileNameSize = startPacket[4 + FILE_SIZE_BYTES];
   fData->fileName = (char *)malloc(fData->fileNameSize * sizeof(char));
   memcpy(fData->fileName, startPacket + 3 + FILE_SIZE_BYTES + 2,
          fData->fileNameSize);
-  printf("file name size is %d\n", fData->fileNameSize);
 
   fData->fullPackets = fData->fileSize / MAX_DATA_CHUNK_SIZE;
   fData->leftover = fData->fileSize % MAX_DATA_CHUNK_SIZE;
@@ -209,6 +204,7 @@ int readDataPacket(int portfd, unsigned char *data, unsigned int dataSize,
   printf("readDataPacket 3\n");
 
   unsigned int n = dataPacket[1];
+  printf("We are expecting packet %d and we got %d\n", expPacketNum, n);
   printf("readDataPacket 4\n");
 
   // if we receive the previous packet(already read)
@@ -303,11 +299,12 @@ int receiveFile(int portfd) {
     // gimmeDataPacket(data, 10, expPacketNum);
     // -------------------------------------------------------
     // UNCOMMENT BELOW!
-    if (readDataPacket(portfd, data, dataSize, expPacketNum) == 2) {
+    int ret = readDataPacket(portfd, data, dataSize, expPacketNum);
+    if (ret == 2) {
       printf("Received duplicate packet number %u... ignoring.\n",
              packetsRecvd);
       continue;
-    } else if (readDataPacket(portfd, data, dataSize, expPacketNum) != 0) {
+    } else if (ret != 0) {
       printf("Error receiving data packet number %u.\n", packetsRecvd);
       return 1;
     }

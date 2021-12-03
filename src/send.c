@@ -122,12 +122,6 @@ static int stuff_data(unsigned char *data, size_t data_size,
 
   int data_idx = 0, stuffed_idx = 0;
 
-  for (int i = 0; i < data_size; i++) {
-    printf("Original data[%d] is %x\n", i, data[i]);
-  }
-
-  printf("\n\n");
-
   for (; data_idx < data_size; data_idx++) {
     if (data[data_idx] == FLAG) {
       stuffed_data[stuffed_idx++] = ESCAPE;
@@ -138,10 +132,6 @@ static int stuff_data(unsigned char *data, size_t data_size,
     } else {
       stuffed_data[stuffed_idx++] = data[data_idx];
     }
-  }
-
-  for (int i = 0; i < stuffed_idx; i++) {
-    printf("Stuffed data[%d] is %x\n", i, stuffed_data[i]);
   }
 
   return stuffed_idx;

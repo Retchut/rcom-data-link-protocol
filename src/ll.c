@@ -88,6 +88,8 @@ int llread(int fd, unsigned char *buffer) {
 
     ret = readInformationMessage(fd, stuffed_msg);
 
+    printf("Ret is %d\n", ret);
+
     if (ret == -1) {
       continue;
     }
