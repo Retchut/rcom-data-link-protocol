@@ -33,9 +33,9 @@ int writeInformationFrame(int fd, unsigned char addr, unsigned char *info_ptr,
   unsigned short stuffed_bcc2;
 
   if (original_bcc2 == FLAG) {
-    stuffed_bcc2 = (ESCAPE << 4) | FLAG_ESCAPE;
+    stuffed_bcc2 = (ESCAPE << 8) | FLAG_ESCAPE;
   } else if (original_bcc2 == ESCAPE) {
-    stuffed_bcc2 = (ESCAPE << 4) | ESCAPE_ESCAPE;
+    stuffed_bcc2 = (ESCAPE << 8) | ESCAPE_ESCAPE;
   } else {
     frame[stuffed_size + 4] = original_bcc2;
     frame[stuffed_size + 5] = FLAG;
@@ -45,11 +45,11 @@ int writeInformationFrame(int fd, unsigned char addr, unsigned char *info_ptr,
     return ret == (I_FRAME_SIZE(stuffed_size) - 1) ? 0 : -1;
   }
 
-  frame[stuffed_size + 4] = ((stuffed_bcc2 & 0xFF00) >> 4);
+  frame[stuffed_size + 4] = ((stuffed_bcc2 & 0xFF00) >> 8);
   frame[stuffed_size + 5] = (stuffed_bcc2 & 0x00FF);
   frame[stuffed_size + 6] = FLAG;
 
-  ret = write(fd, frame, I_FRAME_SIZE(stuffed_size) - 1);
+  ret = write(fd, frame, I_FRAME_SIZE(stuffed_size));
 
   return ret == I_FRAME_SIZE(stuffed_size) ? 0 : -1;
 }
