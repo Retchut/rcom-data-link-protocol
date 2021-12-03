@@ -111,10 +111,6 @@ int sendFile(int portfd, char *fileName) {
     unsigned char dataPacket[dataPacketSize];
     generateDataPacket(dataPacket, &fData, data, dataSize, packetsSent % 2);
 
-    for (int i = 0; i < dataSize; i++) {
-      printf("data[%d] is %x\n", i, data[i]);
-    }
-
     packetsSent++;
     printf("Sent %u out of %u packets.\n", packetsSent, allPackets);
   }
@@ -145,6 +141,7 @@ int readStartPacket(int portfd, struct fileData *fData) {
   unsigned char startPacket[MAX_CTRL_PACKET_SIZE];
   int size = -1;
   if ((size = llread(portfd, startPacket)) == -1) {
+    fprintf(stderr, "llread failed at reading start packet\n");
     return 1;
   }
 
@@ -153,16 +150,19 @@ int readStartPacket(int portfd, struct fileData *fData) {
     return 1;
   }
 
+  printf("llread was good\n");
   if (startPacket[1] != 0) {
     printf("Did not receive a correct start packet.\n");
     return 1;
   }
+  printf("llread was good\n");
 
   if (startPacket[2] != FILE_SIZE_BYTES) {
     printf("Did not receive a correct start packet.\n");
     return 1;
   }
 
+  printf("llread was good\n");
   fData->filePtr = NULL;
   memcpy(&(fData->fileSize), startPacket + 3, FILE_SIZE_BYTES);
 
@@ -170,11 +170,18 @@ int readStartPacket(int portfd, struct fileData *fData) {
     printf("Did not receive a correct start packet.\n");
     return 1;
   }
+  printf("llread was good\n");
+
+  for (int i = 0; i < 20; i++) {
+    printf("startpacket[%d] is %x\n", i, startPacket[i]);
+  }
 
   memcpy(&(fData->fileNameSize), startPacket + 3 + FILE_SIZE_BYTES + 1, 1);
+  printf("file name size is %d\n", fData->fileNameSize);
   fData->fileName = (char *)malloc(fData->fileNameSize * sizeof(char));
   memcpy(fData->fileName, startPacket + 3 + FILE_SIZE_BYTES + 2,
          fData->fileNameSize);
+  printf("file name size is %d\n", fData->fileNameSize);
 
   fData->fullPackets = fData->fileSize / MAX_DATA_CHUNK_SIZE;
   fData->leftover = fData->fileSize % MAX_DATA_CHUNK_SIZE;
@@ -282,38 +289,40 @@ int receiveFile(int portfd) {
       (fData.leftover == 0) ? fData.fullPackets : fData.fullPackets + 1;
   while (true) {
     // ------- REMOVE LATER!!! testing instead of reading start packet -------
-    unsigned char data[10];
+    // unsigned char data[10];
     // -------------------------------------------------------
     // UNCOMMENT BELOW!
-    // unsigned int dataSize = (packetsRecvd <= fData.fullPackets) ?
-    // MAX_DATA_CHUNK_SIZE : fData.leftover; unsigned char data[dataSize];
+    unsigned int dataSize = (packetsRecvd <= fData.fullPackets)
+                                ? MAX_DATA_CHUNK_SIZE
+                                : fData.leftover;
+    unsigned char data[dataSize];
 
     unsigned int expPacketNum = packetsRecvd % 256;
 
     // ------- REMOVE LATER!!! testing instead of reading data packet -------
-    gimmeDataPacket(data, 10, expPacketNum);
+    // gimmeDataPacket(data, 10, expPacketNum);
     // -------------------------------------------------------
     // UNCOMMENT BELOW!
-    // if (readDataPacket(portfd, data, dataSize, expPacketNum) == 2) {
-    //   printf("Received duplicate packet number %u... ignoring.\n",
-    //          packetsRecvd);
-    //   continue;
-    // } else if (readDataPacket(portfd, data, dataSize, expPacketNum) != 0) {
-    //   printf("Error receiving data packet number %u.\n", packetsRecvd);
-    //   return 1;
-    // }
+    if (readDataPacket(portfd, data, dataSize, expPacketNum) == 2) {
+      printf("Received duplicate packet number %u... ignoring.\n",
+             packetsRecvd);
+      continue;
+    } else if (readDataPacket(portfd, data, dataSize, expPacketNum) != 0) {
+      printf("Error receiving data packet number %u.\n", packetsRecvd);
+      return 1;
+    }
 
     // UNCOMMENT BELOW!
     // write data to file
-    // if (fwrite(data, 1, dataSize, fp) != dataSize) {
-    //   printf("Error writing data packet number %u.\n", packetsRecvd);
-    //   return 1;
-    // }
-    // ------------------- REMOVE LATER!!! write dummy data -----------------
-    if (fwrite(data, 1, 10, fp) != 10) {
+    if (fwrite(data, 1, dataSize, fp) != dataSize) {
       printf("Error writing data packet number %u.\n", packetsRecvd);
       return 1;
     }
+    // ------------------- REMOVE LATER!!! write dummy data -----------------
+    // if (fwrite(data, 1, 10, fp) != 10) {
+    //  printf("Error writing data packet number %u.\n", packetsRecvd);
+    //  return 1;
+    //}
     // -------------------------------------------------------
 
     // loop control

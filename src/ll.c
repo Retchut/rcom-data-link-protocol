@@ -112,6 +112,8 @@ int llread(int fd, unsigned char *buffer) {
         continue;
       } else {
         memcpy(buffer, unstuffed_msg, size);
+        for (int i = 0; i < size; i++) {
+        }
         return size;
       }
     } else if (unstuffed_bcc2 == recv_data_bcc2) {
