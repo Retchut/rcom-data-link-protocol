@@ -117,11 +117,13 @@ int llread(int fd, unsigned char *buffer) {
     } else if (unstuffed_bcc2 == recv_data_bcc2) {
       ret = writeSupervisionAndRetry(fd, A_RECV_RSP, C_RR(packet % 2));
       tcflush(fd, TCIFLUSH);
-      return -1;
+      sleep(1);
+      continue;
     } else {
       ret = writeSupervisionAndRetry(fd, A_RECV_RSP, C_REJ(packet));
       tcflush(fd, TCIFLUSH);
-      return -1;
+      sleep(1);
+      continue;
     }
   }
 
@@ -140,6 +142,8 @@ int llwrite(int fd, unsigned char *buffer, unsigned int length) {
     if (ret != -1) {
       frame_nr++;
       return ret;
+    } else {
+      sleep(1);
     }
   }
 
@@ -169,7 +173,7 @@ int llclose(int fd) {
       if (ret != 0) {
         continue;
       } else {
-        sleep(2);
+        sleep(1);
         return reset_config(fd);
       }
     }
