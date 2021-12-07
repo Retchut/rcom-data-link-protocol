@@ -2,6 +2,6 @@ src/*.o
 src/rcom-ftp
 
 #Latex files that are not the required
-Project/docs/report.aux
-Project/docs/report.toc
-Project/docs/report.log
+docs/report.aux
+docs/report.toc
+docs/report.log

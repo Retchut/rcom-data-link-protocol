@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021/Arch Linux) (preloaded format=pdflatex 2021.12.7)  7 DEC 2021 17:58
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2021/Arch Linux) (preloaded format=pdflatex 2021.12.7)  7 DEC 2021 17:59
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -57,8 +57,7 @@ Package: inputenc 2020/08/01 v1.3d Input encoding file
 File: l3backend-pdftex.def 2021-03-18 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count187
 \l__pdf_internal_box=\box47
-)
-No file report.aux.
+) (./report.aux)
 \openout1 = `report.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 11.
@@ -158,9 +157,9 @@ Overfull \hbox (8.92424pt too wide) in paragraph at lines 36--37
 
 [2] [3] (./report.aux) ) 
 Here is how much of TeX's memory you used:
- 1711 strings out of 478994
- 26531 string characters out of 5864751
- 318050 words of memory out of 5000000
+ 1713 strings out of 478994
+ 26553 string characters out of 5864751
+ 318041 words of memory out of 5000000
  19197 multiletter control sequences out of 15000+600000
  407985 words of font info for 42 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
