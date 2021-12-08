@@ -7,9 +7,6 @@
 #include "send.h"
 #include "utils.h"
 
-static int stuff_data(unsigned char *data, size_t data_size,
-                      unsigned char *stuffed_data);
-
 int writeInformationFrame(int fd, unsigned char addr, unsigned char *info_ptr,
                           size_t info_size, int msg_nr) {
 
@@ -116,24 +113,4 @@ int writeSupervisionAndRetry(int fd, unsigned char msg_addr,
   }
 
   return -1;
-}
-
-static int stuff_data(unsigned char *data, size_t data_size,
-                      unsigned char *stuffed_data) {
-
-  int data_idx = 0, stuffed_idx = 0;
-
-  for (; data_idx < data_size; data_idx++) {
-    if (data[data_idx] == FLAG) {
-      stuffed_data[stuffed_idx++] = ESCAPE;
-      stuffed_data[stuffed_idx++] = FLAG_ESCAPE;
-    } else if (data[data_idx] == ESCAPE) {
-      stuffed_data[stuffed_idx++] = ESCAPE;
-      stuffed_data[stuffed_idx++] = ESCAPE_ESCAPE;
-    } else {
-      stuffed_data[stuffed_idx++] = data[data_idx];
-    }
-  }
-
-  return stuffed_idx;
 }

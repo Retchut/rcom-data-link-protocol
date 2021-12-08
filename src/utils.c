@@ -36,3 +36,23 @@ int unstuff_frame(unsigned char *stuffed_msg, size_t size,
 
   return unstuffed_idx;
 }
+
+int stuff_data(unsigned char *data, size_t data_size,
+               unsigned char *stuffed_data) {
+
+  int data_idx = 0, stuffed_idx = 0;
+
+  for (; data_idx < data_size; data_idx++) {
+    if (data[data_idx] == FLAG) {
+      stuffed_data[stuffed_idx++] = ESCAPE;
+      stuffed_data[stuffed_idx++] = FLAG_ESCAPE;
+    } else if (data[data_idx] == ESCAPE) {
+      stuffed_data[stuffed_idx++] = ESCAPE;
+      stuffed_data[stuffed_idx++] = ESCAPE_ESCAPE;
+    } else {
+      stuffed_data[stuffed_idx++] = data[data_idx];
+    }
+  }
+
+  return stuffed_idx;
+}

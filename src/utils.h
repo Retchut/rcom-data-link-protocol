@@ -25,4 +25,16 @@ unsigned char build_BCC2(unsigned char *data, size_t size);
 int unstuff_frame(unsigned char *stuffed_msg, size_t size,
                   unsigned char *unstuffed_msg);
 
+/**
+ * @brief Stuffs the information received
+ *
+ * @param data Messaged to be stuffed
+ * @param data_size Size of the message to be unstuffed
+ * @param stuffed_data Buffer to hold the stuffed message
+ *
+ * @return Size of the stuffed information if successfull, -1 otherwise
+ */
+int stuff_data(unsigned char *data, size_t data_size,
+               unsigned char *stuffed_data);
+
 #endif // RCOM_UTILS_H_
