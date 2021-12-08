@@ -83,7 +83,7 @@ int sendFile(int portfd, char *fileName) {
     return 1;
   }
   printf("Successfully generated the Start Control Packet.\n");
-  
+
   // Send start Control Packet
   if (llwrite(portfd, ctrlPacket, ctrlPacketSize) != ctrlPacketSize) {
     printf("Error sending start control Packet.\n");
@@ -127,7 +127,6 @@ int sendFile(int portfd, char *fileName) {
   printf("Successfully generated the End Control Packet.\n");
 
   // Send End Control Packet
-  // UNCOMMENT BELOW!
   if (llwrite(portfd, ctrlPacket, ctrlPacketSize) != ctrlPacketSize) {
     printf("Error sending end control Packet.\n");
     return -1;
@@ -185,7 +184,8 @@ int readStartPacket(int portfd, struct fileData *fData) {
   return 0;
 }
 
-int readDataPacket(int portfd, unsigned char *data, unsigned int dataPacketSize, unsigned int dataSize, unsigned int expPacketNum) {
+int readDataPacket(int portfd, unsigned char *data, unsigned int dataPacketSize,
+                   unsigned int dataSize, unsigned int expPacketNum) {
   unsigned char *dataPacket = (unsigned char *)malloc(dataPacketSize);
   if (llread(portfd, dataPacket) == -1) {
     free(dataPacket);
@@ -241,10 +241,7 @@ int readEndPacket(int portfd) {
 int receiveFile(int portfd) {
   // read start packet
   struct fileData fData;
-  // ------- REMOVE LATER!!! testing instead of reading start packet -------
-  // gimmeStartPacket(&fData);
-  // -------------------------------------------------------
-  //  UNCOMMENT BELOW!!!!
+
   if (readStartPacket(portfd, &fData) != 0) {
     printf("Error reading the start packet.\n");
     return 1;
@@ -252,7 +249,6 @@ int receiveFile(int portfd) {
   printf("Successfully read the start packet and retrieved the file's data.\n");
 
   // prepare modified fileName
-  // TODO: Breaks here because of incorrect memory writing leading to segfault
   char newName[9 + fData.fileNameSize];
   sprintf(newName, "%s%s", "received-", fData.fileName);
 
@@ -271,14 +267,17 @@ int receiveFile(int portfd) {
   unsigned int allPackets =
       (fData.leftover == 0) ? fData.fullPackets : fData.fullPackets + 1;
   while (true) {
-    unsigned int dataSize = (packetsRecvd <= fData.fullPackets) ? MAX_DATA_CHUNK_SIZE : fData.leftover;
+    unsigned int dataSize = (packetsRecvd <= fData.fullPackets)
+                                ? MAX_DATA_CHUNK_SIZE
+                                : fData.leftover;
     unsigned int dataPacketSize = DATA_PACKET_SIZE(dataSize);
 
     unsigned char data[dataSize];
 
     unsigned int expPacketNum = packetsRecvd % 256;
 
-    int ret = readDataPacket(portfd, data, dataPacketSize, dataSize, expPacketNum);
+    int ret =
+        readDataPacket(portfd, data, dataPacketSize, dataSize, expPacketNum);
     if (ret == 2) {
       printf("Received duplicate packet number %u... ignoring.\n",
              packetsRecvd);
@@ -323,7 +322,9 @@ int main(int argc, char *argv[]) {
 
   if (!(argc == 3 && strcmp(argv[1], "receiver") == 0) &&
       !(argc == 4 && strcmp(argv[1], "emitter") == 0)) {
-    fprintf(stderr, "Usage:\t./rcom-ftp Role SerialPortNum [File]\n\tex: \t./rcom-ftp emitter 11 pinguim.gif\n\t\t./rcom-ftp receiver 10\n");
+    fprintf(stderr,
+            "Usage:\t./rcom-ftp Role SerialPortNum [File]\n\tex: \t./rcom-ftp "
+            "emitter 11 pinguim.gif\n\t\t./rcom-ftp receiver 10\n");
     exit(-1);
   }
 
@@ -362,39 +363,5 @@ int main(int argc, char *argv[]) {
     exit(-1);
   }
 
-  return 0;
-}
-
-// REMOVE LATER!!!
-int gimmeStartPacket(struct fileData *fData) {
-  fData->fileNameSize = 11;
-  fData->fileSize = 10968;
-  // fData->fileSize = 18;
-  fData->fileName = "pinguim.gif";
-  fData->fullPackets = fData->fileSize / MAX_DATA_CHUNK_SIZE;
-  fData->leftover = fData->fileSize % MAX_DATA_CHUNK_SIZE;
-  return 0;
-}
-
-int gimmeDataPacket(unsigned char *data, unsigned int dataSize,
-                    unsigned int expPacketNum) {
-  // unsigned char testTXT[] = {0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20,
-  // 0x73, 0x6F, 0x6D, 0x65, 0x20, 0x74, 0x65, 0x78, 0x74, 0x0A}; memcpy(data,
-  // testTXT, 18);
-  dataSize = 10;
-  unsigned char dest[11][10] = {
-      {0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x01, 0x01, 0x2F, 0x01},
-      {0xA9, 0xEB, 0xFA, 0x6B, 0x70, 0xBB, 0x01, 0x1C, 0x6A, 0x23},
-      {0xE2, 0x25, 0xEE, 0x70, 0x0B, 0x4B, 0x60, 0xC2, 0x76, 0x15},
-      {0x68, 0x8B, 0x51, 0x95, 0x47, 0x26, 0x70, 0x03, 0x3C, 0x10},
-      {0x89, 0xB4, 0x46, 0x7B, 0x32, 0xE8, 0x09, 0x2E, 0x1D, 0x9A},
-      {0x8A, 0xDF, 0xE1, 0xFA, 0xE0, 0x1C, 0xBE, 0x58, 0x11, 0x8B},
-      {0x3A, 0x2E, 0xB6, 0x71, 0xFB, 0x82, 0xE2, 0x06, 0x83, 0xA1},
-      {0x40, 0x55, 0xC3, 0xB2, 0xB5, 0x83, 0x61, 0x81, 0x2C, 0x73},
-      {0x35, 0xB5, 0x76, 0xED, 0xA2, 0x4F, 0xFF, 0x05, 0x6B, 0x2E},
-      {0x3B, 0x51, 0x29, 0x01, 0xDF, 0xB0, 0xF0, 0xD8, 0x02, 0x9B},
-      {0x83, 0x3F, 0x8E, 0x94, 0x75, 0x79, 0x97, 0x7F, 0x0B, 0xA0}};
-
-  memcpy(data, dest[expPacketNum], dataSize);
   return 0;
 }
