@@ -47,9 +47,107 @@ The application consists of two main layers, one to interact with the file to be
 
 \subsection{Data-Link Layer}
 
-\paragraph{}This layer can be found in the \textbf{ll.c} file and it is responsible for ensuring a smooth data transmission over the hardware, including opening, closing, writing and reading from the serial port, with the help of the auxiliary functions present in \textbf{config.c}, \textbf{read.c}, \textbf{send.c}, \textbf{state.c} and \textbf{utils.c}
+\paragraph{}This layer can be found in the \textbf{ll.c} file and it is responsible for ensuring a smooth data transmission over the hardware, including opening, closing, writing and reading from the serial port, with the help of the auxiliary functions present in \textbf{config.c}, \textbf{read.c}, \textbf{send.c}, \textbf{state.c} and \textbf{utils.c}.
 
 \section{Code Structure}
+
+\paragraph{}The code is divided into seven source code files, separated by responsibility (reading from or writing to the serial port), and by layer. Also, each of them has a corresponding header file. Finally, there is a dedicated header file that hosts several common constants.
+
+\subsection{Application - rcom-ftp.c}
+
+\paragraph{}This module contains the entire application layer developed.
+
+\paragraph{Main Functions}
+
+\begin{itemize}
+        \item{main - Interacts with the user and passes the arguments given to the rest of the program.}
+        \item{sendFile - Sends the file requested by the user.}
+        \item{readFile - Retrieves the file sent by the user.}
+\end{itemize}
+
+\paragraph{Main Data Structures}
+
+\begin{itemize}
+        \item{fileData - Responsible for holding some metadata of the file.}
+\end{itemize}
+
+\subsection{Config - config.c}
+
+\paragraph{}This module contains the functions required for setting up the serial port for proper file transferring.
+
+\paragraph{Main Functions}
+
+\begin{itemize}
+        \item{set\_config - Sets up the initial configuration for the serial port.}
+        \item{reset\_config - Restores the serial port to its initial state.}
+\end{itemize}
+
+\subsection{Link Layer - ll.c}
+
+\paragraph{}This module contains the interface for the Link Layer of the protocol.
+
+\paragraph{Main Functions}
+
+\begin{itemize}
+        \item{llopen - Opens the serial port from frame transmission.}
+        \item{llwrite - Writes a frame to the serial port.}
+        \item{llread - Reads a frame from the serial port and checks its integrity.}
+        \item{llclose - Closes the serial port after communication ceases.}
+\end{itemize}
+
+\subsection{Reading - read.c}
+
+\paragraph{}This module contains the functions responsible for reading from the serial port.
+
+\paragraph{Main Functions}
+
+\begin{itemize}
+        \item{readSupervisionFrame - Reads a supervision frame and checks if the information is received correctly.}
+        \item{readInformationMessage - Reads an information message and saves the data, which includes the BCC, in a buffer.}
+\end{itemize}
+
+\subsection{Writing - send.c}
+
+\paragraph{}This module contains the functions responsible for writing to the serial port.
+
+\paragraph{Main Functions}
+
+\begin{itemize}
+        \item{writeSupervisionAndRetry - Attempts to write a supervision Frame in 3 attempts. If it succeeds, it stops.}
+        \item{writeInformationAndRetry - Attempts to write an information Frame in 3 attempts. If it succeeds, it stops.}
+\end{itemize}
+
+\subsection{State Management - state.c}
+
+\paragraph{}This module contains the functions responsible for managing the state of the application.
+
+\paragraph{Main Functions}
+
+\begin{itemize}
+        \item{handle\_state - Function responsible for managing the state of the application, according to the data received.}
+\end{itemize}
+
+\paragraph{Main Data Structures}
+
+\begin{itemize}
+        \item{state\_t - Enumeration containing the possible states of the application.}
+        \item{state\_machine - Besides the state of the machine, holds some of the main pieces of information from each frame.}
+\end{itemize}
+
+\subsection{Utilities - utils.c}
+
+\paragraph{}This module contains some auxiliary functions that help the others with their operations.
+
+\paragraph{Main Functions}
+
+\begin{itemize}
+        \item{stuff\_data - This functions stuffs the data given.}
+        \item{unstuff\_frame - This functions unstuffs the frame given.}
+\end{itemize}
+
+\subsection{Constants - defines.h}
+
+\paragraph{}This module contains some of the more meaningful constants used throughout the application, like Supervision Frame constants, Rejection Messages, among others.
 
 \section{Main use cases}
 
