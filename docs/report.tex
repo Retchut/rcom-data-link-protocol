@@ -39,7 +39,15 @@ The report is organized as follows:
 
 \section{Architecture}
 
-The application consists of two main layers, one to interact with the file to be sent and another to interact with the hardware. They are the Application Layer, and the Data-Link layer, and they are detailed below.
+The application consists of two main layers, one to interact with the file to be sent and another to interact with the hardware. They are the Application Layer, and the Data-Link Layer, and they are detailed below.
+
+\subsection{Application Layer}
+
+\paragraph{}This layer can be found in the \textbf{rcom-ftp.c} file, and it encompasses everything related to interaction with the files, be it opening, closing, reading and writing to and from it. Besides that, this is the layer through which the user interacts with the application.
+
+\subsection{Data-Link Layer}
+
+\paragraph{}This layer can be found in the \textbf{ll.c} file and it is responsible for ensuring a smooth data transmission over the hardware, including opening, closing, writing and reading from the serial port, with the help of the auxiliary functions present in \textbf{config.c}, \textbf{read.c}, \textbf{send.c}, \textbf{state.c} and \textbf{utils.c}
 
 \section{Code Structure}
 
