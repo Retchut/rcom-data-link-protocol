@@ -2,7 +2,7 @@
 
 \usepackage{graphicx}
 \usepackage[utf8]{inputenc}
-\usepackage[margin=1cm]{geometry}
+\usepackage[margin=3.9cm]{geometry}
 \graphicspath{{./images/}}
 
 \title{\includegraphics[scale=0.3]{logo.png} \\ \textbf{Data Link Protocol}}
@@ -272,14 +272,25 @@ it in a buffer.
 \section{Validation}
 
 \paragraph{}In order to test the protocol, files of different sizes were sent, namely \textbf{pinguim.gif}
-(10968 bytes) and testText.txt (2053 bytes). Also, the transmission was tested with transmission timeouts
-(on the lab), and with introduction of errors (by placing a bit of metal that would send erroneous bits
-sometimes). All tests were verified by using the \textbf{md5sum} hashing function.
+(10968 bytes) and testText.txt (2053 bytes). Also, the transmission was tested with timeouts
+on the lab, and with introduction of random errors, by placing a bit of metal that would send erroneous bits
+sometimes. All tests were verified by using the \textbf{md5sum} hashing function.
 
 \section{Efficiency}
 
 \paragraph{}As of the writing of this report, efficiency was not tested.
 
 \section{Conclusion}
+
+\paragraph{}The task assigned consisted in implementing a data transfer protocol to communicate over a serial
+port. In this assignment, it was key to create distinct layers, and, more importantly, make sure they didn't
+know each other's implementation. This lead to a structure in which the application layer, the ``highest''
+section of the program, only knew what the data-link layer did, but not how it operated, and the data-link
+knew only that it would receive data and would have to transmit it. This effectively creates two distinct
+entities that in nothing influence each other, but work together for the objective of transmitting data.
+
+\paragraph{}The project was completed successfully, and it contributed a great deal for a deepened knowledge
+on how data is actually transferred, how errors in the data are handled, and how a file can almost magically
+appear on another computer.
 
 \end{document}
