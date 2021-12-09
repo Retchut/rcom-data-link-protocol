@@ -1,7 +1,7 @@
-#include <fcntl.h>
-#include <stdbool.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
+#include <fcntl.h>
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>

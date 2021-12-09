@@ -1,14 +1,11 @@
-
-#include <ctype.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 
-#include "config.h"
-#include "ll.h"
 #include "rcom-ftp.h"
-#include "send.h"
+#include "ll.h"
 
 int retrieveFileData(struct fileData *fData, FILE *filePtr, char *fileName) {
   struct stat fileStat;

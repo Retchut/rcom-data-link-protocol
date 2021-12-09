@@ -1,8 +1,7 @@
+#include <stdio.h>
+
 #include "state.h"
 #include "datalink-defines.h"
-#include "ll.h"
-
-#include <stdio.h>
 
 static state_machine state;
 

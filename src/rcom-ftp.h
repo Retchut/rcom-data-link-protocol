@@ -2,15 +2,10 @@
 #define _RCOM_FTP_H_
 
 #include <stdbool.h>
-#include <stdio.h>
-
-// Boolean values
-#define FALSE 0
-#define TRUE 1
 
 // Roles
-#define RECEIVER FALSE
-#define TRANSMITTER TRUE
+#define RECEIVER false
+#define TRANSMITTER true
 #define UNKNOWN_ROLE -1
 
 // Packet defines

@@ -1,6 +1,7 @@
-#include "utils.h"
-#include "datalink-defines.h"
 #include <stdio.h>
+
+#include "datalink-defines.h"
+#include "utils.h"
 
 unsigned char build_BCC2(unsigned char *data, size_t size) {
   unsigned char bcc2 = data[0];
