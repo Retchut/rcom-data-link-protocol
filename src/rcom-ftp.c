@@ -57,6 +57,7 @@ void generateDataPacket(unsigned char *dataPacket, struct fileData *fData,
   unsigned char dataPacketHeader[4] = {PACKET_DATA, seqN, l2, l1};
   memcpy(dataPacket, dataPacketHeader, 4);
   memcpy(dataPacket + DATA_PACKET_HEADER_SIZE, data, dataSize);
+  printf("created packet: %u\n", dataPacket[1]);
 }
 
 int sendFile(int portfd, char *fileName) {
@@ -111,7 +112,7 @@ int sendFile(int portfd, char *fileName) {
     // Create Data Packet
     unsigned int dataPacketSize = DATA_PACKET_SIZE(dataSize);
     unsigned char dataPacket[dataPacketSize];
-    generateDataPacket(dataPacket, &fData, data, dataSize, packetsSent % 2);
+    generateDataPacket(dataPacket, &fData, data, dataSize, packetsSent % 256);
 
     if (llwrite(portfd, dataPacket, dataPacketSize) == -1) {
       fprintf(stderr, "Error writing packet %d\n", packetsSent);
@@ -188,6 +189,7 @@ int readStartPacket(int portfd, struct fileData *fData) {
 int readDataPacket(int portfd, unsigned char *data, unsigned int dataPacketSize,
                    unsigned int dataSize, unsigned int expPacketNum) {
   unsigned char *dataPacket = (unsigned char *)malloc(dataPacketSize);
+  printf("datapacketsize: %u\n", dataPacketSize);
   if (llread(portfd, dataPacket) == -1) {
     free(dataPacket);
     printf("llread failed at readDataPacket\n");
@@ -201,6 +203,8 @@ int readDataPacket(int portfd, unsigned char *data, unsigned int dataPacketSize,
   }
 
   unsigned int n = dataPacket[1];
+  printf("expected packet: %u\n", expPacketNum);
+  printf("received packet: %u\n", n);
 
   //if we don't receive the correct packet
   if(n != expPacketNum){
