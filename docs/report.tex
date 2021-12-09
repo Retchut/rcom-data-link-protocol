@@ -2,10 +2,12 @@
 
 \usepackage{graphicx}
 \usepackage[utf8]{inputenc}
+\usepackage[margin=1cm]{geometry}
 \graphicspath{{./images/}}
 
 \title{\includegraphics[scale=0.3]{logo.png} \\ \textbf{Data Link Protocol}}
-\author{Computer Networks\\ Bachelors in Informatics and Computing Engineering \\ \\ 3LEIC03\_G3 \\ \\ Tiago Rodrigues up201907021@fe.up.pt \\ Mário Travassos up201905871@fe.up.pt  }
+\author{Computer Networks\\ Bachelors in Informatics and Computing Engineering \\ \\ 3LEIC03\_G3 \\ \\ Tiago
+Rodrigues up201907021@fe.up.pt \\ Mário Travassos up201905871@fe.up.pt  }
 \date{\today}
 
 \begin{document}
@@ -16,13 +18,18 @@
 
 \section*{Summary}
 
-\paragraph{}This report will cover the first work proposed for the Computer Networks Curricular Unit, with the objective of creating a small application that could transfer data through two computers asynchronously, through a serial port.
+\paragraph{}This report will cover the first work proposed for the Computer Networks Curricular Unit, with
+the objective of creating a small application that could transfer data through two computers asynchronously,
+through a serial port.
 
-\paragraph{}The application is capable of transferring files whilst mainting their integrity, and detect errors in transmission, resolving them if possible.
+\paragraph{}The application is capable of transferring files whilst mainting their integrity, and detect
+errors in transmission, resolving them if possible.
 
 \section*{Introduction}
 
-\paragraph{}This report is the result of an examination to the practical component, which was the development of a data transfer protocol. A serial port was used to transfer the files in an asynchronous fashion.
+\paragraph{}This report is the result of an examination to the practical component, which was the
+development of a data transfer protocol. A serial port was used to transfer the files in an asynchronous
+fashion.
 
 The report is organized as follows:
 
@@ -39,19 +46,28 @@ The report is organized as follows:
 
 \section{Architecture}
 
-The application consists of two main layers, one to interact with the file to be sent and another to interact with the hardware. They are the Application Layer, and the Data-Link Layer, and they are detailed below.
+The application consists of two main layers, one to interact with the file to be sent and another to
+interact with the hardware. They are the Application Layer, and the Data-Link Layer, and they are detailed
+below.
 
 \subsection{Application Layer}
 
-\paragraph{}This layer can be found in the \textbf{rcom-ftp.c} file, and it encompasses everything related to interaction with the files, be it opening, closing, reading and writing to and from it. Besides that, this is the layer through which the user interacts with the application.
+\paragraph{}This layer can be found in the \textbf{rcom-ftp.c} file, and it encompasses everything related
+to interaction with the files, be it opening, closing, reading and writing to and from it. Besides that,
+this is the layer through which the user interacts with the application.
 
 \subsection{Data-Link Layer}
 
-\paragraph{}This layer can be found in the \textbf{ll.c} file and it is responsible for ensuring a smooth data transmission over the hardware, including opening, closing, writing and reading from the serial port, with the help of the auxiliary functions present in \textbf{config.c}, \textbf{read.c}, \textbf{send.c}, \textbf{state.c} and \textbf{utils.c}.
+\paragraph{}This layer can be found in the \textbf{ll.c} file and it is responsible for ensuring a smooth
+data transmission over the hardware, including opening, closing, writing and reading from the serial port,
+with the help of the auxiliary functions present in \textbf{config.c}, \textbf{read.c}, \textbf{send.c},
+\textbf{state.c} and \textbf{utils.c}.
 
 \section{Code Structure}
 
-\paragraph{}The code is divided into seven source code files, separated by responsibility (reading from or writing to the serial port), and by layer. Also, each of them has a corresponding header file. Finally, there is a dedicated header file that hosts several common constants.
+\paragraph{}The code is divided into seven source code files, separated by responsibility (reading from or
+writing to the serial port), and by layer. Also, each of them has a corresponding header file. Finally,
+there is a dedicated header file that hosts several common constants.
 
 \subsection{Application - rcom-ftp.c}
 
@@ -73,7 +89,8 @@ The application consists of two main layers, one to interact with the file to be
 
 \subsection{Config - config.c}
 
-\paragraph{}This module contains the functions required for setting up the serial port for proper file transferring.
+\paragraph{}This module contains the functions required for setting up the serial port for proper file
+transferring.
 
 \paragraph{Main Functions}
 
@@ -102,8 +119,10 @@ The application consists of two main layers, one to interact with the file to be
 \paragraph{Main Functions}
 
 \begin{itemize}
-        \item{readSupervisionFrame - Reads a supervision frame and checks if the information is received correctly.}
-        \item{readInformationMessage - Reads an information message and saves the data, which includes the BCC, in a buffer.}
+  \item{readSupervisionFrame - Reads a supervision frame and checks if the information is received
+        correctly.}
+  \item{readInformationMessage - Reads an information message and saves the data, which includes the
+        BCC, in a buffer.}
 \end{itemize}
 
 \subsection{Writing - send.c}
@@ -113,8 +132,10 @@ The application consists of two main layers, one to interact with the file to be
 \paragraph{Main Functions}
 
 \begin{itemize}
-        \item{writeSupervisionAndRetry - Attempts to write a supervision Frame in 3 attempts. If it succeeds, it stops.}
-        \item{writeInformationAndRetry - Attempts to write an information Frame in 3 attempts. If it succeeds, it stops.}
+  \item{writeSupervisionAndRetry - Attempts to write a supervision Frame in 3 attempts. If it
+        succeeds, it stops.}
+  \item{writeInformationAndRetry - Attempts to write an information Frame in 3 attempts. If it
+        succeeds, it stops.}
 \end{itemize}
 
 \subsection{State Management - state.c}
@@ -124,14 +145,16 @@ The application consists of two main layers, one to interact with the file to be
 \paragraph{Main Functions}
 
 \begin{itemize}
-        \item{handle\_state - Function responsible for managing the state of the application, according to the data received.}
+  \item{handle\_state - Function responsible for managing the state of the application, according to
+        the data received.}
 \end{itemize}
 
 \paragraph{Main Data Structures}
 
 \begin{itemize}
         \item{state\_t - Enumeration containing the possible states of the application.}
-        \item{state\_machine - Besides the state of the machine, holds some of the main pieces of information from each frame.}
+  \item{state\_machine - Besides the state of the machine, holds some of the main pieces of
+        information from each frame.}
 \end{itemize}
 
 \subsection{Utilities - utils.c}
@@ -147,11 +170,58 @@ The application consists of two main layers, one to interact with the file to be
 
 \subsection{Constants - defines.h}
 
-\paragraph{}This module contains some of the more meaningful constants used throughout the application, like Supervision Frame constants, Rejection Messages, among others.
+\paragraph{}This module contains some of the more meaningful constants shared throughout the application.
 
 \section{Main use cases}
 
+\paragraph{}The application should be first compiled with the provided Makefile, by running
+\verb|make clean && make|. Then, if we are the receiver, we run \verb|./rcom-ftp receiver <port>|, or, if we
+are the emitter, \verb|./rcom-ftp emitter <port> <file>|, where port is the number of the port to be used,
+which will be translated to \verb|/dev/ttyS<port>|, and file is the file to be sent over.
+
+\paragraph{} When starting up the application, the receiver should be called first, otherwise the emitter
+will be trying to connect for a total of 9 tries, making a stop of 1 second between each. If it can't
+succeed in connecting, it will halt. Otherwise, the application layer will begin dividing the file into
+packets, and sending to the receiver through the \textbf{llwrite} function, whilst the receiver is reading
+with the \textbf{llread} one. Finally, both of them should call \textbf{llclose} in order to cease
+transmission.
+
 \section{The Data link Layer}
+
+\paragraph{}This layer is responsible for interacting with the serial port, abstracting away the intricacies
+using it, producing a consistent layer of work for the application. It uses several auxiliary functions, as
+a way to better structure the code, assigning to each function a single responsibility. The main functions
+are divided as follows:
+
+\subsection*{llopen}
+
+\paragraph{}The \textbf{llopen} function sets up the communication between the transmitter and receiver. It
+start by configuring the serial for for proper reading and writing, setting the appropriate flags and
+setting \textbf{VTIME} to 30 and \textbf{VMIN} to 0, which ensures the read function won't have to wait for
+a character to return.
+
+\paragraph{}After that, and according to the provided role, it will either send a \textbf{SET} command and
+await for a \textbf{UA}, if it is the emitter, or wait for a \textbf{SET} command and then send a
+\textbf{UA}, in the case of the transmitter. To do this, they take advantage of the
+\verb|writeSupervisionAndRetry| and the \verb|readSupervisionFrame| functions, which, respectively, handle
+writing to the serial port and reading from it, setting the appropriate state.
+
+\subsection*{llwrite}
+
+\paragraph{}As the name implies, the \textbf{llwrite} function writes a given packet of data to the serial
+port. To do this, it calls the \verb|writeInformationAndRetry| function, which, through the use of
+\verb|writeInformationFrame|, appends the frame header and trailer, and writes it to the serial port. It
+retries if the writing is unsuccessful, a total of 3 times, point at which it returns with an error.
+After a successful writing, it waits to receive a confirmation message, either accepting or rejecting the
+frame. If it accepts, then the frame is written and \textbf{llwrite} halts. Otherwise, if it was rejected, then it
+resends the same frame again, not increasing the attempts made (as writing was successful, but the message
+got rejected). Finally, if some error ocurred, it tries to resend the message until all tries all consumed.
+
+\subsection*{llread}
+
+\paragraph{}The workings of \textbf{llread} are similar to those of \textbf{llwrite}
+
+\subsection*{llclose}
 
 \section{The Application Layer}
 
