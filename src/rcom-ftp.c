@@ -6,7 +6,6 @@
 #include <sys/stat.h>
 
 #include "config.h"
-#include "defines.h"
 #include "ll.h"
 #include "rcom-ftp.h"
 #include "send.h"
@@ -51,8 +50,8 @@ int generateControlPacket(unsigned char *ctrlPacket, struct fileData *fData,
 
 void generateDataPacket(unsigned char *dataPacket, struct fileData *fData,
                         unsigned char *data, unsigned int dataSize, int seqN) {
-  unsigned int l1 = MAX_DATA_CHUNK_SIZE % 256;
-  unsigned int l2 = MAX_DATA_CHUNK_SIZE / 256;
+  unsigned int l1 = dataSize % 256;
+  unsigned int l2 = dataSize / 256;
   unsigned char dataPacketHeader[4] = {PACKET_DATA, seqN, l2, l1};
   memcpy(dataPacket, dataPacketHeader, 4);
   memcpy(dataPacket + DATA_PACKET_HEADER_SIZE, data, dataSize);
@@ -96,7 +95,7 @@ int sendFile(int portfd, char *fileName) {
   unsigned int allPackets =
       (fData.leftover == 0) ? fData.fullPackets : fData.fullPackets + 1;
 
-  printf("Sending packets...\n");
+  printf("\nSending packets...\n");
   while (packetsSent < allPackets) {
     // read data
     unsigned int dataSize = (packetsSent < fData.fullPackets)
@@ -110,7 +109,7 @@ int sendFile(int portfd, char *fileName) {
     // Create Data Packet
     unsigned int dataPacketSize = DATA_PACKET_SIZE(dataSize);
     unsigned char dataPacket[dataPacketSize];
-    generateDataPacket(dataPacket, &fData, data, dataSize, packetsSent % 2);
+    generateDataPacket(dataPacket, &fData, data, dataSize, packetsSent % 256);
 
     if (llwrite(portfd, dataPacket, dataPacketSize) == -1) {
       fprintf(stderr, "Error writing packet %d\n", packetsSent);
@@ -120,7 +119,7 @@ int sendFile(int portfd, char *fileName) {
     packetsSent++;
     printf("Sent %u out of %u packets.\n", packetsSent, allPackets);
   }
-  printf("\nAll %u packets sent.\n", allPackets);
+  printf("\nAll %u packets sent.\n\n", allPackets);
 
   // Set up End Control Packet
   ctrlPacket[0] = PACKET_CTRL_END;
@@ -201,14 +200,8 @@ int readDataPacket(int portfd, unsigned char *data, unsigned int dataPacketSize,
 
   unsigned int n = dataPacket[1];
 
-  // if we receive the previous packet(already read)
-  if (n == ((expPacketNum - 1 + 256) % 256)) {
-    free(dataPacket);
-    return 2;
-  }
-  // if we receive a packet ahead
-  else if (n == ((expPacketNum + 1) % 256)) {
-    printf("Received a packet in advance... aborting.\n");
+  //if we don't receive the correct packet
+  if(n != expPacketNum){
     free(dataPacket);
     return 1;
   }
@@ -246,7 +239,7 @@ int receiveFile(int portfd) {
     printf("Error reading the start packet.\n");
     return 1;
   }
-  printf("Successfully read the start packet and retrieved the file's data.\n");
+  printf("\nSuccessfully read the start packet and retrieved the file's data.\n");
 
   // prepare modified fileName
   char newName[9 + fData.fileNameSize];
@@ -267,7 +260,7 @@ int receiveFile(int portfd) {
   unsigned int allPackets =
       (fData.leftover == 0) ? fData.fullPackets : fData.fullPackets + 1;
   while (true) {
-    unsigned int dataSize = (packetsRecvd <= fData.fullPackets)
+    unsigned int dataSize = (packetsRecvd < fData.fullPackets)
                                 ? MAX_DATA_CHUNK_SIZE
                                 : fData.leftover;
     unsigned int dataPacketSize = DATA_PACKET_SIZE(dataSize);
@@ -276,13 +269,7 @@ int receiveFile(int portfd) {
 
     unsigned int expPacketNum = packetsRecvd % 256;
 
-    int ret =
-        readDataPacket(portfd, data, dataPacketSize, dataSize, expPacketNum);
-    if (ret == 2) {
-      printf("Received duplicate packet number %u... ignoring.\n",
-             packetsRecvd);
-      continue;
-    } else if (ret != 0) {
+    if (readDataPacket(portfd, data, dataPacketSize, dataSize, expPacketNum) != 0) {
       printf("Error receiving data packet number %u.\n", packetsRecvd);
       return 1;
     }
@@ -300,20 +287,20 @@ int receiveFile(int portfd) {
     if (packetsRecvd == allPackets)
       break;
   }
-  printf("All %u packets received.\n", allPackets);
+  printf("\nAll %u packets received.\n\n", allPackets);
 
   if (readEndPacket(portfd) != 0) {
     printf("Error reading the end packet.\n");
     return 1;
   }
-  printf("\nSuccessfully read the End Control Packet.\n");
+  printf("Successfully read the End Control Packet.\n");
 
   // close
   if (fclose(fp) != 0) {
     printf("Error closing the file.\n");
     return 1;
   }
-  printf("Successfully closed the file.\n");
+  printf("Successfully closed the file.\n\n");
 
   return 0;
 }
