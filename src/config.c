@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 #include "config.h"
-#include "defines.h"
+#include "datalink-defines.h"
 
 static struct termios old_termio;
 

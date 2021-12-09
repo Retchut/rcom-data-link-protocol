@@ -12,7 +12,7 @@
 // Roles
 #define RECEIVER FALSE
 #define TRANSMITTER TRUE
-#define UNKNOW_ROLE -1
+#define UNKNOWN_ROLE -1
 
 #define BIT(shift) 1 << shift
 

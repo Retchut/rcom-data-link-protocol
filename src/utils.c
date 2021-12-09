@@ -1,5 +1,5 @@
 #include "utils.h"
-#include "defines.h"
+#include "datalink-defines.h"
 #include <stdio.h>
 
 unsigned char build_BCC2(unsigned char *data, size_t size) {

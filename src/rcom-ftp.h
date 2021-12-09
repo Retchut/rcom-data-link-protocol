@@ -4,6 +4,16 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+// Boolean values
+#define FALSE 0
+#define TRUE 1
+
+// Roles
+#define RECEIVER FALSE
+#define TRANSMITTER TRUE
+#define UNKNOWN_ROLE -1
+
+// Packet defines
 #define MAX_DATA_CHUNK_SIZE 1024
 #define DATA_PACKET_HEADER_SIZE 4
 #define DATA_PACKET_SIZE(dSize) dSize + DATA_PACKET_HEADER_SIZE

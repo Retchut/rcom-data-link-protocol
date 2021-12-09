@@ -3,7 +3,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "defines.h"
+#include "datalink-defines.h"
 #include "ll.h"
 #include "read.h"
 #include "state.h"

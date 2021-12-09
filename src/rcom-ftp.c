@@ -6,7 +6,6 @@
 #include <sys/stat.h>
 
 #include "config.h"
-#include "defines.h"
 #include "ll.h"
 #include "rcom-ftp.h"
 #include "send.h"

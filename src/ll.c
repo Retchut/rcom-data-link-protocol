@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 #include "config.h"
-#include "defines.h"
+#include "datalink-defines.h"
 #include "ll.h"
 #include "read.h"
 #include "send.h"
@@ -74,7 +74,7 @@ int llopen(int port, bool role_p) {
     return -1;
   } else {
 
-    return UNKNOW_ROLE;
+    return UNKNOWN_ROLE;
   }
 }
 
@@ -206,7 +206,7 @@ int llclose(int fd) {
     }
 
   } else {
-    return UNKNOW_ROLE;
+    return UNKNOWN_ROLE;
   }
 
   return -1;

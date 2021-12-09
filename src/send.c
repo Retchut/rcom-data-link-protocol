@@ -2,7 +2,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "defines.h"
+#include "datalink-defines.h"
 #include "read.h"
 #include "send.h"
 #include "utils.h"
