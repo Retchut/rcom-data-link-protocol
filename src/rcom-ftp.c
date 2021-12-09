@@ -24,6 +24,7 @@ int retrieveFileData(struct fileData *fData, FILE *filePtr, char *fileName) {
   fData->fileSize = (unsigned int)fileStat.st_size;
   fData->fullPackets = fData->fileSize / MAX_DATA_CHUNK_SIZE;
   fData->leftover = fData->fileSize % MAX_DATA_CHUNK_SIZE;
+  printf("\nleftover: %u\n\n", fData->leftover);
 
   return 0;
 }
@@ -201,14 +202,8 @@ int readDataPacket(int portfd, unsigned char *data, unsigned int dataPacketSize,
 
   unsigned int n = dataPacket[1];
 
-  // if we receive the previous packet(already read)
-  if (n == ((expPacketNum - 1 + 256) % 256)) {
-    free(dataPacket);
-    return 2;
-  }
-  // if we receive a packet ahead
-  else if (n == ((expPacketNum + 1) % 256)) {
-    printf("Received a packet in advance... aborting.\n");
+  //if we don't receive the correct packet
+  if(n != expPacketNum){
     free(dataPacket);
     return 1;
   }
@@ -267,7 +262,7 @@ int receiveFile(int portfd) {
   unsigned int allPackets =
       (fData.leftover == 0) ? fData.fullPackets : fData.fullPackets + 1;
   while (true) {
-    unsigned int dataSize = (packetsRecvd <= fData.fullPackets)
+    unsigned int dataSize = (packetsRecvd < fData.fullPackets)
                                 ? MAX_DATA_CHUNK_SIZE
                                 : fData.leftover;
     unsigned int dataPacketSize = DATA_PACKET_SIZE(dataSize);
@@ -276,13 +271,7 @@ int receiveFile(int portfd) {
 
     unsigned int expPacketNum = packetsRecvd % 256;
 
-    int ret =
-        readDataPacket(portfd, data, dataPacketSize, dataSize, expPacketNum);
-    if (ret == 2) {
-      printf("Received duplicate packet number %u... ignoring.\n",
-             packetsRecvd);
-      continue;
-    } else if (ret != 0) {
+    if (readDataPacket(portfd, data, dataPacketSize, dataSize, expPacketNum) != 0) {
       printf("Error receiving data packet number %u.\n", packetsRecvd);
       return 1;
     }
