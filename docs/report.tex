@@ -215,19 +215,70 @@ retries if the writing is unsuccessful, a total of 3 times, point at which it re
 After a successful writing, it waits to receive a confirmation message, either accepting or rejecting the
 frame. If it accepts, then the frame is written and \textbf{llwrite} halts. Otherwise, if it was rejected, then it
 resends the same frame again, not increasing the attempts made (as writing was successful, but the message
-got rejected). Finally, if some error ocurred, it tries to resend the message until all tries all consumed.
+got rejected). Finally, if some error occurred, it tries to resend the message until all tries all consumed.
 
 \subsection*{llread}
 
-\paragraph{}The workings of \textbf{llread} are similar to those of \textbf{llwrite}
+\paragraph{}The workings of \textbf{llread} are similar to those of \textbf{llwrite}. First, it tries to read the incoming information message. When successfull, it then proceeds to unstuff the incoming frame and
+check if the data has been corrupted. If it hasn't, then it acknowledges the packet, sending back a
+\textbf{RR} frame, and if sent successfully, returns the size of the information read. When the data appears
+to be corrupted, it sends a \textbf{REJ} frame, telling the emitter to retry sending that information.
+Finally, if some error occurred, it returns with an error as well, ceasing transmission.
 
 \subsection*{llclose}
 
+\paragraph{}Finally, this function handles the cease of communication between the two computers. If the
+caller is the emitter, it will start of by sending a \textbf{DISC} frame, telling the receiver it wishes to
+stop communication. Then, it waits for a \textbf{DISC} response and sends a final \textbf{UA} frame before
+terminating. The receiver works the other way around, first waiting for a \textbf{DISC} frame to be read,
+then sending his \textbf{DISC}, and finally reading the \textbf{UA} before being able to shutdown. Both, in
+case there is a problem with writing, try again for a total of 9 attempts, before exiting with error.
+
 \section{The Application Layer}
+
+\subsection*{sendFile}
+
+\paragraph{}This is the main function that drives the emitter. It starts by retrieving the metadata from the
+file, to make it easier to divide into equally sized packets. Afterwards, it generates a starter
+packet that contains the metadata from the file, and proceeds to send out the file contents. Each packet
+sent has a maximum size of 1024 bytes, which means that it will send 1024 byte packets for as long as
+possible, and in the last one, it sends the leftover bytes that didn't reach 1024. Finally, it resends the
+starter packet, but with a flag changed meaning that it will be end of the transmission. At each step, in
+the event of a malfunction, it returns with an error.
+
+\subsection*{receiveFile}
+
+\paragraph{}On the other end, the \textbf{receiveFile} function is in charge of driving the receiver. It's
+way of working is much like the one on \textbf{sendFile}. Firstly, it reads the starting packet containing
+the metadata on the file. It then creates the new file, appending received to the start of the original
+file name. Afterwards, it reads the packets containing information, one by one, and assembles the file after
+each successfull packet receive. Finally, it reads the end Packet, which will tell the receiver to stop
+trying to read any longer. Once again, if at any point the receiver detects an error reading any packet, it
+will stop with an error.
+
+\subsection*{generateDataPacket}
+
+\paragraph{}This function creates the packets that will be sent over to the receiver. It starts by appending
+the correct packet header, and then copies the information over to packet buffer, returning it.
+
+\subsection*{readDataPacket}
+
+\paragraph{}This function is analogous to the \textbf{generateDataPacket} one, and it's job is to read a
+packet and check for its integrity after transmission. To do this, it starts by checking if the packet is in
+fact a data packet, by verifying the first bit. Then it makes sure that the data packet received is not a
+duplicate, aborting if it is. Finally, and if all goes well, it retrieves the information contained and saves
+it in a buffer.
 
 \section{Validation}
 
+\paragraph{}In order to test the protocol, files of different sizes were sent, namely \textbf{pinguim.gif}
+(10968 bytes) and testText.txt (2053 bytes). Also, the transmission was tested with transmission timeouts
+(on the lab), and with introduction of errors (by placing a bit of metal that would send erroneous bits
+sometimes). All tests were verified by using the \textbf{md5sum} hashing function.
+
 \section{Efficiency}
+
+\paragraph{}As of the writing of this report, efficiency was not tested.
 
 \section{Conclusion}
 
