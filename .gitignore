@@ -1,6 +1,6 @@
 src/*.o
 src/rcom-ftp
-.gitignore
+.vscode/
 
 #Latex files that are not the required
 docs/report.aux
