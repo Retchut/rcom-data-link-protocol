@@ -18,7 +18,7 @@
 
 // Message Sending
 #define MAX_DATA_CHUNK_SIZE 1024
-#define MAX_FRAME_SIZE 1024 * 2 + 7
+#define MAX_FRAME_SIZE MAX_DATA_CHUNK_SIZE * 2 + 7
 #define NUM_TRIES 3
 #define REJECTED -2
 
