@@ -1,13 +1,12 @@
-#include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <termios.h>
+#include <stdlib.h>
 #include <unistd.h>
+#include <termios.h>
 
-#include "config.h"
-#include "datalink-defines.h"
 #include "ll.h"
+#include "datalink-defines.h"
+#include "config.h"
 #include "read.h"
 #include "send.h"
 #include "state.h"

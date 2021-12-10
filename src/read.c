@@ -3,9 +3,8 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "datalink-defines.h"
-#include "ll.h"
 #include "read.h"
+#include "datalink-defines.h"
 #include "state.h"
 
 int readSupervisionFrame(int fd) {

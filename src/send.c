@@ -2,9 +2,9 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "datalink-defines.h"
-#include "read.h"
 #include "send.h"
+#include "read.h"
+#include "datalink-defines.h"
 #include "utils.h"
 
 int writeInformationFrame(int fd, unsigned char addr, unsigned char *info_ptr,

@@ -5,13 +5,9 @@
 #define BAUDRATE B38400
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 
-// Boolean values
-#define FALSE 0
-#define TRUE 1
-
 // Roles
-#define RECEIVER FALSE
-#define TRANSMITTER TRUE
+#define RECEIVER 0
+#define TRANSMITTER 1
 #define UNKNOWN_ROLE -1
 
 #define BIT(shift) 1 << shift
