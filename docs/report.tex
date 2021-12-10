@@ -2,8 +2,9 @@
 
 \usepackage{graphicx}
 \usepackage[utf8]{inputenc}
-\usepackage[margin=3.9cm]{geometry}
+\usepackage[margin=3.5cm]{geometry}
 \graphicspath{{./images/}}
+\usepackage{minted}
 
 \title{\includegraphics[scale=0.3]{logo.png} \\ \textbf{Data Link Protocol}}
 \author{Computer Networks\\ Bachelors in Informatics and Computing Engineering \\ \\ 3LEIC03\_G3 \\ \\ Tiago
@@ -22,8 +23,7 @@ Rodrigues up201907021@fe.up.pt \\ Mário Travassos up201905871@fe.up.pt  }
 the objective of creating a small application that could transfer data through two computers asynchronously,
 through a serial port.
 
-\paragraph{}The application is capable of transferring files whilst mainting their integrity, and detect
-errors in transmission, resolving them if possible.
+\paragraph{}The application is capable of transferring files whilst maintaining their integrity, and detect errors in transmission, resolving them if possible.
 
 \section*{Introduction}
 
@@ -34,13 +34,13 @@ fashion.
 The report is organized as follows:
 
 \begin{enumerate}
-  \item{Architecture- Functional blocks and interfaces}
+  \item{Architecture - Functional blocks and interfaces}
   \item{Code Structure - APIs, main code structures and their relation with the architecture}
   \item{Main use cases - Identification and Call Stack Sequence}
   \item{Data link Protocol - Main functional aspects and implementation strategy}
   \item{Application Protocol - Main functional aspects and implementation strategy }
   \item{Validation - Description of the tests conducted}
-  \item{Efficiency - Statistical characterization of efficiency, against a Stop\&Wait protocol}
+  \item{Efficiency - Statistical characterization of efficiency}
   \item{Conclusion - Summary of the above descriptions, reflection on the learning objectives}
 \end{enumerate}
 
@@ -168,9 +168,9 @@ transferring.
         \item{unstuff\_frame - This functions unstuffs the frame given.}
 \end{itemize}
 
-\subsection{Constants - datalink-defines.h}
+\subsection{Constants - datalink-defines.h and rcom-ftp.h}
 
-\paragraph{}This module contains some of the more meaningful constants shared throughout the application.
+\paragraph{}This modules contain some of the more meaningful constants shared throughout the application.
 
 \section{Main use cases}
 
@@ -214,12 +214,12 @@ port. To do this, it calls the \verb|writeInformationAndRetry| function, which, 
 retries if the writing is unsuccessful, a total of 3 times, point at which it returns with an error.
 After a successful writing, it waits to receive a confirmation message, either accepting or rejecting the
 frame. If it accepts, then the frame is written and \textbf{llwrite} halts. Otherwise, if it was rejected, then it
-resends the same frame again, not increasing the attempts made (as writing was successful, but the message
+re-sends the same frame again, not increasing the attempts made (as writing was successful, but the message
 got rejected). Finally, if some error occurred, it tries to resend the message until all tries all consumed.
 
 \subsection*{llread}
 
-\paragraph{}The workings of \textbf{llread} are similar to those of \textbf{llwrite}. First, it tries to read the incoming information message. When successfull, it then proceeds to unstuff the incoming frame and
+\paragraph{}The workings of \textbf{llread} are similar to those of \textbf{llwrite}. First, it tries to read the incoming information message. When successful, it then proceeds to unstuff the incoming frame and
 check if the data has been corrupted. If it hasn't, then it acknowledges the packet, sending back a
 \textbf{RR} frame, and if sent successfully, returns the size of the information read. When the data appears
 to be corrupted, it sends a \textbf{REJ} frame, telling the emitter to retry sending that information.
@@ -239,12 +239,13 @@ case there is a problem with writing, try again for a total of 9 attempts, befor
 \subsection*{sendFile}
 
 \paragraph{}This is the main function that drives the emitter. It starts by retrieving the metadata from the
-file, to make it easier to divide into equally sized packets. Afterwards, it generates a starter
+file, to make it easier to divide into equally sized packets. Afterwards, it generates a starting control
 packet that contains the metadata from the file, and proceeds to send out the file contents. Each packet
-sent has a maximum size of 1024 bytes, which means that it will send 1024 byte packets for as long as
-possible, and in the last one, it sends the leftover bytes that didn't reach 1024. Finally, it resends the
-starter packet, but with a flag changed meaning that it will be end of the transmission. At each step, in
-the event of a malfunction, it returns with an error.
+sent can be configured to a desired size, but has a maximum allowed size of 1024 bytes, which means that, in
+the worst case, it will send 1024 byte packets for as long as possible, and in the last one, it sends the
+leftover bytes that didn't reach 1024. Finally, it re-sends the control packet, but with a flag changed
+meaning that it will be end of the transmission. At each step, in the event of a malfunction, it returns
+with an error.
 
 \subsection*{receiveFile}
 
@@ -252,7 +253,7 @@ the event of a malfunction, it returns with an error.
 way of working is much like the one on \textbf{sendFile}. Firstly, it reads the starting packet containing
 the metadata on the file. It then creates the new file, appending received to the start of the original
 file name. Afterwards, it reads the packets containing information, one by one, and assembles the file after
-each successfull packet receive. Finally, it reads the end Packet, which will tell the receiver to stop
+each successful packet receive. Finally, it reads the end Packet, which will tell the receiver to stop
 trying to read any longer. Once again, if at any point the receiver detects an error reading any packet, it
 will stop with an error.
 
@@ -271,14 +272,34 @@ it in a buffer.
 
 \section{Validation}
 
-\paragraph{}In order to test the protocol, files of different sizes were sent, namely \textbf{pinguim.gif}
-(10968 bytes) and testText.txt (2053 bytes). Also, the transmission was tested with timeouts
-on the lab, and with introduction of random errors, by placing a bit of metal that would send erroneous bits
-sometimes. All tests were verified by using the \textbf{md5sum} hashing function.
+\paragraph{}In order to test the protocol, files of different sizes were sent, ranging from
+\textbf{test1.txt} (128 bytes) and \textbf{test10.pdf} (128662771 bytes). Also, the data packet size was
+varied to check for performance, with sizes going from 8 bytes to 1024 bytes. Finally, we also tested
+variations in the baudrate, with values going from 2896, all the way up to 11764736. Besides varying the
+values of certain aspects of the program, the transmission was tested with timeouts on the lab, and with
+introduction of random errors, by placing a piece of metal that would send erroneous bits sometimes. All
+tests were verified by using the \textbf{md5sum} hashing function.
 
 \section{Efficiency}
 
-\paragraph{}As of the writing of this report, efficiency was not tested.
+\paragraph{}All the tests results are available in \textbf{Annex II}
+
+\subsection*{Variation in the File Size}
+
+\paragraph{}As expected, an increase in the file size increased the execution time linearly, both for the
+execution time of the emitter and the receiver. This is expected and implies that the system functions
+well regardless of the input given, which is key in a data transfer protocol.
+
+\subsection*{Variation in the Packet Size}
+
+\paragraph{}Regarding the Data Packet Size, it is possible to see that with larger packets there is a
+performance gain to be had, as there is less overhead with adding and decoupling packet headers and frame
+headers and trailers. But also, for packets that are too large, the possibility of errors being generated
+and the need for re-transmission can become burdening, and slow down the rest of the program.
+
+\subsection*{Variation in the Baudrate}
+
+\paragraph{}For the values tested, no significant changes in the execution time of the program were recorded.
 
 \section{Conclusion}
 
@@ -292,5 +313,145 @@ entities that in nothing influence each other, but work together for the objecti
 \paragraph{}The project was completed successfully, and it contributed a great deal for a deepened knowledge
 on how data is actually transferred, how errors in the data are handled, and how a file can almost magically
 appear on another computer.
+
+\newpage
+
+\section*{Annex I - Source Code}
+
+\subsection*{config.c}
+
+\inputminted{c}{config.c}
+
+\newpage
+
+\subsection*{config.h}
+
+\inputminted{c}{config.h}
+
+\newpage
+
+\subsection*{datalink-defines.h}
+
+\inputminted{c}{datalink-defines.h}
+
+\newpage
+
+\subsection*{ll.c}
+
+\inputminted{c}{ll.c}
+
+\newpage
+
+\subsection*{ll.h}
+
+\inputminted{c}{ll.h}
+
+\newpage
+
+\subsection*{rcom-ftp.c}
+
+\inputminted{c}{rcom-ftp.c}
+
+\newpage
+
+\subsection*{rcom-ftp.h}
+
+\inputminted{c}{rcom-ftp.h}
+
+\newpage
+
+\subsection*{read.c}
+
+\inputminted{c}{read.c}
+
+\newpage
+
+\subsection*{read.h}
+
+\inputminted{c}{read.h}
+
+\newpage
+
+\subsection*{send.c}
+
+\inputminted{c}{send.c}
+
+\newpage
+
+\subsection*{send.h}
+
+\inputminted{c}{send.h}
+
+\newpage
+
+\subsection*{state.c}
+
+\inputminted{c}{state.c}
+
+\newpage
+
+\subsection*{state.h}
+
+\inputminted{c}{state.h}
+
+\newpage
+
+\subsection*{utils.c}
+
+\inputminted{c}{utils.c}
+
+\newpage
+
+\subsection*{utils.h}
+
+\inputminted{c}{utils.h}
+
+\section*{Annex II - Tests}
+
+\subsection*{Variation in the File Size}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.45]{graph1.jpeg}
+    \caption{Execution time of the emitter according to File Size}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.45]{graph2.jpeg}
+    \caption{Execution time of the receiver according to File Size}
+\end{figure}
+
+\newpage
+
+\subsection*{Variation in the Packet Size}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.45]{graph3.jpeg}
+    \caption{Execution time of the emitter according to Packet Size}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.45]{graph4.jpeg}
+    \caption{Execution time of the receiver according to Packet Size}
+\end{figure}
+
+\newpage
+
+\subsection*{Variation in the Baudrate}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.45]{graph5.jpeg}
+    \caption{Execution time of the emitter according to Baudrate}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.45]{graph6.jpeg}
+    \caption{Execution time of the receiver according to Baudrate}
+\end{figure}
 
 \end{document}
